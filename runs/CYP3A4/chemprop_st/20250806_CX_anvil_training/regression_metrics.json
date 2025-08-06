@@ -1,0 +1,35 @@
+{
+  "tag": "openadmet-CYP3A4-pchembl-regression-testing-cv",
+  "cyp3a4_pchembl_value_mean": {
+    "mse": {
+      "value": 0.23611625011557139,
+      "lower_ci": 0.21229668512324107,
+      "upper_ci": 0.258331420109751,
+      "confidence_level": 0.95
+    },
+    "mae": {
+      "value": 0.3418192225059706,
+      "lower_ci": 0.32967032731632995,
+      "upper_ci": 0.3537686794157745,
+      "confidence_level": 0.95
+    },
+    "r2": {
+      "value": 0.45907091814484746,
+      "lower_ci": 0.41026219944518827,
+      "upper_ci": 0.5102396470362838,
+      "confidence_level": 0.95
+    },
+    "ktau": {
+      "value": 0.4573422575469467,
+      "lower_ci": 0.43610103263344724,
+      "upper_ci": 0.4778911533226961,
+      "confidence_level": 0.95
+    },
+    "spearmanr": {
+      "value": 0.6176580918026717,
+      "lower_ci": 0.5923491327860269,
+      "upper_ci": 0.643829845251289,
+      "confidence_level": 0.95
+    }
+  }
+}

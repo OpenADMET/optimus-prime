@@ -1,0 +1,86 @@
+data:
+  cat_entry: null
+  input_col: OPENADMET_SMILES
+  resource: ../multitask.csv
+  target_cols:
+  - cyp3a4_pchembl_value_mean
+  type: intake
+  dropna: true
+metadata:
+  authors: Hugo M-O
+  biotargets:
+  - CYP3A4
+  build_number: 0
+  description: basic regression  using a ChemProp multitask task model
+  driver: pytorch
+  email: hugo.macdermott-opeskin@omsf.io
+  name: chemprop_MT_pchembl_testing_chemprop
+  tag: openadmet-CYP3A4-pchembl-regression-testing-cv
+  tags:
+  - openadmet
+  - test
+  - pchembl
+  version: v1
+
+procedure:
+  split:
+    type: "ShuffleSplitter"
+    params:
+      train_size: 0.8
+      val_size: 0.1
+      test_size: 0.1
+      shuffle: True
+
+  feat:
+    type: "GATGraphFeaturizer"
+    params: {}
+
+  model:
+    type: GATv2ModelWrapper
+    params:
+      input_dim: 8
+      edge_dim: 4
+      hidden_dim: 64
+      num_layers: 4
+      num_heads: 8
+      gat_dropout: 0.1
+      pooling: "mean"
+      output_dim: 1
+
+  train:
+    type: "GATv2LightningTrainer"
+    params:
+      max_epochs: 3
+      accelerator: "gpu"
+      devices: 1
+      use_wandb: False
+      early_stopping: True
+      early_stopping_patience: 5
+      loss_function: "mse"
+      scheduler: "reduce_on_plateau"
+      scheduler_factor: 0.3
+      scheduler_patience: 15
+
+report:
+  eval:
+  - params: {}
+    type: RegressionMetrics
+  - params:
+      axes_labels:
+      - True pChEMBL
+      - Predicted pChEMBL
+      max_val: 10
+      min_val: 3
+      pXC50: true
+      title: Multitask True vs Predicted pChEMBL on test set
+    type: RegressionPlots
+  - params:
+      axes_labels:
+      - True pChEMBL
+      - Predicted pChEMBL
+      n_repeats: 2
+      n_splits: 5
+      pXC50: true
+      random_state: 42
+      title: Multitask True vs Predicted pChEMBL on test set
+    type: PytorchLightningRepeatedKFoldCrossValidation

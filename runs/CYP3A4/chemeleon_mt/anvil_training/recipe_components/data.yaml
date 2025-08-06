@@ -1,0 +1,11 @@
+anvil_dir: file:///home/xuc2/skunkworks/gpu_testing/gpu_runs/chemeleon_mt
+cat_entry: null
+dropna: false
+input_col: OPENADMET_SMILES
+resource: ../multitask.csv
+target_cols:
+- cyp3a4_pchembl_value_mean
+- cyp2d6_pchembl_value_mean
+- cyp2c9_pchembl_value_mean
+- cyp1a2_pchembl_value_mean
+type: intake

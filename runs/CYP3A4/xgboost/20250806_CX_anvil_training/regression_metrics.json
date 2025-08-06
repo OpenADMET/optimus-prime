@@ -1,0 +1,35 @@
+{
+  "tag": "openadmet-PXR-chembl",
+  "cyp3a4_pchembl_value_mean": {
+    "mse": {
+      "value": 0.23329325553385072,
+      "lower_ci": 0.21269943337534408,
+      "upper_ci": 0.25225501901282443,
+      "confidence_level": 0.95
+    },
+    "mae": {
+      "value": 0.34605185192194576,
+      "lower_ci": 0.33657475331257786,
+      "upper_ci": 0.3555398943622697,
+      "confidence_level": 0.95
+    },
+    "r2": {
+      "value": 0.4784611322951776,
+      "lower_ci": 0.4442766494222845,
+      "upper_ci": 0.5148752372767328,
+      "confidence_level": 0.95
+    },
+    "ktau": {
+      "value": 0.4434928911062027,
+      "lower_ci": 0.42667243372691055,
+      "upper_ci": 0.46063407782757027,
+      "confidence_level": 0.95
+    },
+    "spearmanr": {
+      "value": 0.6045002891271831,
+      "lower_ci": 0.5840657316479125,
+      "upper_ci": 0.6256451897809792,
+      "confidence_level": 0.95
+    }
+  }
+}
