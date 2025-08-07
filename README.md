@@ -18,6 +18,9 @@ canonical_recipes/
   ├── lgbm
   ├── tabpfn # still in progress
   └── xgboost
+  └── catboost
+  └── random forest
+  └── dummy
 ```
 Models that should really only be run on GPU are:
 - Chemeleon (DL)
