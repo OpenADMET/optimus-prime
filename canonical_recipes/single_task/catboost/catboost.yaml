@@ -1,4 +1,4 @@
-# This spection specifies the input data
+# This section specifies the input data
 data:
   # Specify the dataset file
   resource: ../data.parquet
