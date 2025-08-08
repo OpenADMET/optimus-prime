@@ -39,8 +39,8 @@ procedure:
   split:
     params:
       random_state: 42
-      test_size: 0.3
-      train_size: 0.7
+      test_size: 0.2
+      train_size: 0.8
     type: ShuffleSplitter
   train:
     type: SKLearnBasicTrainer
