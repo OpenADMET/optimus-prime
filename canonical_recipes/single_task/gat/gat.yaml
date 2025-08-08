@@ -11,7 +11,7 @@ metadata:
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression  using a ChemProp multitask task model
+  description: basic regression  using a GAT model
   driver: pytorch
   email: hugo.macdermott-opeskin@omsf.io
   name: chemprop_MT_pchembl_testing_chemprop
@@ -26,9 +26,9 @@ procedure:
   split:
     type: "ShuffleSplitter"
     params:
-      train_size: 0.8
+      train_size: 0.7
       val_size: 0.1
-      test_size: 0.1
+      test_size: 0.2
       shuffle: True
 
   feat:
@@ -50,7 +50,7 @@ procedure:
   train:
     type: "GATv2LightningTrainer"
     params:
-      max_epochs: 3
+      max_epochs: 50
       accelerator: "gpu"
       devices: 1
       use_wandb: False
