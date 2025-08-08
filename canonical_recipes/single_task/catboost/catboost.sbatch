@@ -14,4 +14,4 @@ source ${HOME}/.bashrc
 conda activate openadmet4
 
 # Launch script
-openadmet anvil --recipe-path xgboost.yaml
+openadmet anvil --recipe-path catboost.yaml

@@ -14,4 +14,4 @@ source ${HOME}/.bashrc
 conda activate openadmet4
 
 # Launch script
-openadmet anvil --recipe-path lgbm.yaml
+openadmet anvil --recipe-path rf.yaml
