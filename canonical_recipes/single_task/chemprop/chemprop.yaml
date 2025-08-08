@@ -1,14 +1,14 @@
-# Section specifying input data
+# This spection specifies the input data
 data:
   # Specify the dataset file
-  resource: ../data.parquet
-  # Specify input column containing SMILES
-  input_col: OPENADMET_CANONICAL_SMILES
-  # Specify whether or not to drop NaN data rows
-  dropna: False
-  # Specify each (1+) of the target columns
+  resource: ../ChEMBL_permissive_CYP3A4_CHEMBL340_aggregated.parquet
+  type: intake
+  input_col: OPENADMET_SMILES
+  # Specify each (1+) of the target columns, or the column that you're trying to predict
   target_cols:
-  - OPENADMET_LOGAC50
+  - pchembl_value_mean
+  dropna: true
+
 
 # Additional metadata
 metadata:
