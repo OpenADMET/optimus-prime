@@ -36,7 +36,7 @@ procedure:
     params: {}
 
   model:
-    type: GATv2ModelWrapper
+    type: GATv2Model
     params:
       input_dim: 8
       edge_dim: 4
