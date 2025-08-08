@@ -1,13 +1,7 @@
 # Section specifying input data
 data:
-  # Specify where anvil will run (inputs, outputs, etc.)
-  anvil_dir: demos/anvil_models/chemprop
   # Specify the dataset file
   resource: ../data.parquet
-  # TODO: add description of intake
-  type: intake
-  # COMMENT ONCE WE KNOW WHAT THIS IS
-  cat_entry: null
   # Specify input column containing SMILES
   input_col: OPENADMET_CANONICAL_SMILES
   # Specify whether or not to drop NaN data rows
@@ -83,7 +77,7 @@ procedure:
       early_stopping_patience: 10
       early_stopping_mode: min
       early_stopping_min_delta: 0.001
-      max_epochs: 20
+      max_epochs: 50
       monitor_metric: val_loss
       use_wandb: false
       wandb_project: demos # Specify wandb project name according to guidelines

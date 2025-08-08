@@ -1,14 +1,7 @@
 # This spection specifies the input data
 data:
-  # Specify where anvil will run (inputs, outputs, etc.)
-  anvil_dir: demos/anvil_models/lgbm
   # Specify the dataset file
   resource: ../data.parquet
-  # TODO: add description of intake
-  type: intake
-  # COMMENT ONCE WE KNOW WHAT THIS IS
-  cat_entry: null
-  # Specify input column containing SMILES
   input_col: OPENADMET_CANONICAL_SMILES
   # Specify each (1+) of the target columns, or the column that you're trying to predict
   target_cols:
@@ -21,11 +14,11 @@ metadata:
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression using a LightGBM model
+  description: basic regression using a XGBoost model
   driver: sklearn
   email: cynthia.xu@omsf.io
-  name: lgbm_pchembl
-  tag: openadmet-PXR-chembl
+  name: xgboost_pchembl
+  tag: openadmet-chembl
   tags:
   - openadmet
   - test
@@ -36,10 +29,11 @@ metadata:
 procedure:
 # Featurization specification
   feat:
-    # Using the ChemPropFeaturizer (for ChemProp model)
-    # See openadmet.models.features
+    # Using concatenated features, which combines multiple featurizers
+    # here we use DescriptorFeaturizer and FingerprintFeaturizer for 2D RDKit descriptors and ECFP4 fingerprints
+    # See openadmet.models.features 
     type: FeatureConcatenator
-    # Add parameters for the featurizer. Full description of the featurizer options are in Section 5.
+    # Add parameters for the featurizer
     params:
       featurizers:
         DescriptorFeaturizer:
@@ -56,6 +50,7 @@ procedure:
     params:
       alpha: 0.005
       learning_rate: 0.05
+      n_estimators: 500
 
   # Specify data splits
   split:
@@ -71,15 +66,9 @@ procedure:
     
   # Specify training configuration
   train:
-    # Specify the trainer, here LightningTrainer as ChemProp is a PyTorch Lightning model
-    # See openadmet.models.trainer
-    type: SKLearnGridSearchTrainer
-    # Specify model parameters
-    params:
-      param_grid:
-        n_estimators: [500]
-        alpha: [0.005]
-        learning_rate: [0.05]
+    # Specify the trainer, here SKLearnBasicTrainer as model has an sklearn interface
+    # could also use SKLearnGridSearchTrainer for hyperparameter tuning
+    type: SKLearnBasicTrainer
 
 # Section specifying report generation
 report:
