@@ -1,7 +1,9 @@
 # Section specifying input data
 data:
-  # Specify the dataset file
-  resource: ../multitask.csv
+  # Specify the dataset file, can be S3 path etc.
+  resource: ../ChEMBL_pChEMBL_cyp_multitask.parquet
+  # must be intake
+  type: intake
   # Specify input column containing SMILES
   input_col: OPENADMET_CANONICAL_SMILES
   # Specify whether or not to drop NaN data rows
@@ -62,7 +64,7 @@ procedure:
 
   # Specify data splits
   split:
-    # Specify how data will be split
+    # Specify how data will be split, can be ShuffleSplitter, ScaffoldSplitter, etc.
     # See openadmet.models.split
     type: ShuffleSplitter
     # Specify split parameters
