@@ -1,11 +1,12 @@
 # This section specifies the input data
 data:
   # Specify the dataset file
-  resource: ../data.parquet
-  input_col: OPENADMET_CANONICAL_SMILES
+  resource: ../ChEMBL_permissive_CYP3A4_CHEMBL340_aggregated.parquet
+  type: intake
+  input_col: OPENADMET_SMILES
   # Specify each (1+) of the target columns, or the column that you're trying to predict
   target_cols:
-  - cyp3a4_pchembl_value_mean
+  - pchembl_value_mean
   dropna: true
 
 # Additional metadata
