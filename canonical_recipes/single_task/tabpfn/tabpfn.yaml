@@ -1,25 +1,26 @@
+# This spection specifies the input data
 data:
-  anvil_dir: file:///store/projects/OpenADMET/openadmet-toolkit/skunkworks/chemprop_multitask
-  cat_entry: null
-  input_col: OPENADMET_SMILES
-  resource: ../multitask.csv
-  target_cols:
-  - cyp3a4_pchembl_value_mean
+  # Specify the dataset file
+  resource: ../ChEMBL_permissive_CYP3A4_CHEMBL340_aggregated.parquet
   type: intake
+  input_col: OPENADMET_SMILES
+  # Specify each (1+) of the target columns, or the column that you're trying to predict
+  target_cols:
+  - pchembl_value_mean
   dropna: true
+
+# Additional metadata
 metadata:
-  authors: Hugo M-O
+  authors: Cynthia Xu
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression with combined fingerprint and descriptor features
-    using LGBM
+  description: basic regression using a TabPFN model
   driver: sklearn
-  email: hugo.macdermott-opeskin@omsf.io
-  name: CYP3A4_pchembl_testing_lgbm
-  tag: openadmet-CYP3A4-pchembl-regression-testing-cv
+  email: cynthia.xu@omsf.io
+  name: tabpfn_pchembl
+  tag: openadmet-chembl
   tags:
-  - CYP3A4
   - openadmet
   - test
   - pchembl
@@ -39,8 +40,8 @@ procedure:
   split:
     params:
       random_state: 42
-      test_size: 0.3
-      train_size: 0.7
+      test_size: 0.2
+      train_size: 0.8
     type: ShuffleSplitter
   train:
     type: SKLearnBasicTrainer

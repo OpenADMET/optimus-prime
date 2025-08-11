@@ -1,13 +1,9 @@
 # Section specifying input data
 data:
-  # Specify where anvil will run (inputs, outputs, etc.)
-  anvil_dir: demos/anvil_models/chemprop
-  # Specify the dataset file
-  resource: ../multitask.csv
-  # TODO: add description of intake
+  # Specify the dataset file, can be S3 path etc.
+  resource: ../ChEMBL_pChEMBL_cyp_multitask.parquet
+  # must be intake
   type: intake
-  # COMMENT ONCE WE KNOW WHAT THIS IS
-  cat_entry: null
   # Specify input column containing SMILES
   input_col: OPENADMET_CANONICAL_SMILES
   # Specify whether or not to drop NaN data rows
@@ -32,10 +28,11 @@ metadata:
   driver: pytorch
   email: cynthia.xu@omsf.io
   name: chemprop_pchembl
-  tag: chemprop-PXR-chembl
+  tag: chemprop
   tags:
   - openadmet
   - test
+  - chemprop
   version: v1
 
 # Section specifying training procedure
@@ -67,7 +64,7 @@ procedure:
 
   # Specify data splits
   split:
-    # Specify how data will be split
+    # Specify how data will be split, can be ShuffleSplitter, ScaffoldSplitter, etc.
     # See openadmet.models.split
     type: ShuffleSplitter
     # Specify split parameters
@@ -89,7 +86,7 @@ procedure:
       early_stopping_patience: 10
       early_stopping_mode: min
       early_stopping_min_delta: 0.001
-      max_epochs: 20
+      max_epochs: 50
       monitor_metric: val_loss
       use_wandb: false
       wandb_project: demos # Specify wandb project name according to guidelines

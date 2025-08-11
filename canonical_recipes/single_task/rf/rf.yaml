@@ -1,4 +1,4 @@
-# This spection specifies the input data
+# This section specifies the input data
 data:
   # Specify the dataset file
   resource: ../ChEMBL_permissive_CYP3A4_CHEMBL340_aggregated.parquet
@@ -15,10 +15,10 @@ metadata:
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression using a XGBoost model
+  description: basic regression using a random forest model
   driver: sklearn
   email: cynthia.xu@omsf.io
-  name: xgboost_pchembl
+  name: rf_pchembl
   tag: openadmet-chembl
   tags:
   - openadmet
@@ -34,24 +34,23 @@ procedure:
     # here we use DescriptorFeaturizer and FingerprintFeaturizer for 2D RDKit descriptors and ECFP4 fingerprints
     # See openadmet.models.features 
     type: FeatureConcatenator
-    # Add parameters for the featurizer
+    # Add parameters for the featurizer. Full description of the featurizer options are in Section 5.
     params:
       featurizers:
         DescriptorFeaturizer:
           descr_type: "desc2d"
         FingerprintFeaturizer:
           fp_type: "ecfp:4"
-  
+
   # Model specification
   model:
     # Indicate model type
     # See openadmet.models.architecture for all model types
-    type: XGBRegressorModel
+    type: RFRegressorModel
     # Specify model parameters
     params:
-      alpha: 0.005
-      learning_rate: 0.05
-      n_estimators: 500
+      n_estimators: 100
+      max_depth: 10
 
   # Specify data splits
   split:
@@ -62,14 +61,14 @@ procedure:
     params:
       random_state: 42
       train_size: 0.8
-      val_size: 0.0 # For LGBM, no validation set is needed
-      test_size: 0.2 # If you want to compare tree-based models with Dl models later, the test sizes should match
-    
-  # Specify training configuration
+      val_size: 0.0
+      test_size: 0.2
+
   train:
     # Specify the trainer, here SKLearnBasicTrainer as model has an sklearn interface
     # could also use SKLearnGridSearchTrainer for hyperparameter tuning
     type: SKLearnBasicTrainer
+
 
 # Section specifying report generation
 report:
@@ -78,15 +77,15 @@ report:
   # Generate regression metrics
   - type: RegressionMetrics
     params: {}
-  # Generate regression plots & do cross validation
+  # Generate regression plots
   - type: SKLearnRepeatedKFoldCrossValidation
     params:
       axes_labels:
-      - True pAC50
-      - Predicted pAC50
+      - True pChEMBL
+      - Predicted pChEMBL
       max_val: 10
       min_val: 3
       pXC50: true
       n_splits: 5
       n_repeats: 5
-      title: Multitask True vs Predicted pAC50 on test set
+      title:  True vs Predicted pChEMBL on test set

@@ -1,4 +1,4 @@
-# This spection specifies the input data
+# This section specifies the input data
 data:
   # Specify the dataset file
   resource: ../ChEMBL_permissive_CYP3A4_CHEMBL340_aggregated.parquet
@@ -15,10 +15,10 @@ metadata:
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression using a XGBoost model
+  description: basic regression using a CatBoost model
   driver: sklearn
   email: cynthia.xu@omsf.io
-  name: xgboost_pchembl
+  name: catboost_pchembl
   tag: openadmet-chembl
   tags:
   - openadmet
@@ -46,11 +46,9 @@ procedure:
   model:
     # Indicate model type
     # See openadmet.models.architecture for all model types
-    type: XGBRegressorModel
+    type: CatBoostRegressorModel
     # Specify model parameters
     params:
-      alpha: 0.005
-      learning_rate: 0.05
       n_estimators: 500
 
   # Specify data splits
@@ -62,7 +60,7 @@ procedure:
     params:
       random_state: 42
       train_size: 0.8
-      val_size: 0.0 # For LGBM, no validation set is needed
+      val_size: 0.0 # For CatBoost, no validation set is needed
       test_size: 0.2 # If you want to compare tree-based models with Dl models later, the test sizes should match
     
   # Specify training configuration
