@@ -12,12 +12,12 @@ data:
 # Additional metadata
 metadata:
   authors: Cynthia Xu
+  email: cynthia.xu@omsf.io
   biotargets:
   - CYP3A4
   build_number: 0
   description: basic regression using a random forest model
   driver: sklearn
-  email: cynthia.xu@omsf.io
   name: rf_pchembl
   tag: openadmet-chembl
   tags:

@@ -11,7 +11,7 @@
 source ${HOME}/.bashrc
 
 # Activate environment
-conda activate openadmet
+conda activate openadmet_models
 
 # Launch script
 openadmet anvil --recipe-path chemeleon.yaml
