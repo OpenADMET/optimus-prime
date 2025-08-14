@@ -4,14 +4,14 @@
 #SBATCH --time=48:00:00
 #SBATCH --mem=64G
 #SBATCH --ntasks-per-node=1
-#SBATCH --job-name=lgbm
+#SBATCH --job-name=rf
 #SBATCH --gres=gpu:1
 
 # Source bashrc
 source ${HOME}/.bashrc
 
 # Activate environment
-conda activate openadmet4
+conda activate openadmet_models
 
 # Launch script
 openadmet anvil --recipe-path rf.yaml

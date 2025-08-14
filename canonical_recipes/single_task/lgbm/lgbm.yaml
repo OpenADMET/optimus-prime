@@ -12,12 +12,12 @@ data:
 # Additional metadata
 metadata:
   authors: Cynthia Xu
+  email: cynthia.xu@omsf.io
   biotargets:
   - CYP3A4
   build_number: 0
   description: basic regression using a LightGBM model
   driver: sklearn
-  email: cynthia.xu@omsf.io
   name: lgbm_pchembl
   tag: openadmet-chembl
   tags:
