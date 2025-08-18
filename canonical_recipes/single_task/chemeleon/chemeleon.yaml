@@ -99,4 +99,4 @@ report:
       n_splits: 5
       random_state: 42
       pXC50: true
-      title: Multitask True vs Predicted LogAC50 on test set
+      title: True vs Predicted LogAC50 on test set
