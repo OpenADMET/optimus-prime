@@ -87,4 +87,4 @@ report:
       pXC50: true
       n_splits: 5
       n_repeats: 5
-      title: Multitask True vs Predicted pAC50 on test set
+      title: True vs Predicted pAC50 on test set
