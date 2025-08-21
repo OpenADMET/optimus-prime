@@ -1,8 +1,0 @@
-anvil_dir: file:///home/xuc2/skunkworks/gpu_testing/gpu_runs/lgbm
-cat_entry: null
-dropna: true
-input_col: OPENADMET_SMILES
-resource: ../multitask.csv
-target_cols:
-- cyp3a4_pchembl_value_mean
-type: intake
