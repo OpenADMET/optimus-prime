@@ -1,12 +1,17 @@
 data:
   # Specify the dataset file
   resource: ../ChEMBL_permissive_CYP3A4_CHEMBL340_aggregated.parquet
+  # must be intake
   type: intake
+  # Specify input column containing SMILES
   input_col: OPENADMET_SMILES
   # Specify each (1+) of the target columns, or the column that you're trying to predict
   target_cols:
   - pchembl_value_mean
+  # Specify whether or not to drop NaN data rows
   dropna: true
+
+# Additional metadata
 metadata:
   authors: Hugo M-O
   email: hugo.macdermott-opeskin@omsf.io
@@ -23,21 +28,34 @@ metadata:
   - pchembl
   version: v1
 
+# Section specifying training procedure
 procedure:
+  # Specify data splits
   split:
+    # Specify how data will be split, can be ShuffleSplitter, ScaffoldSplitter, etc.
+    # See openadmet.models.split
     type: "ShuffleSplitter"
+    # Specify split parameters
     params:
       train_size: 0.7
       val_size: 0.1
       test_size: 0.2
       shuffle: True
 
+  # Featurization specification
   feat:
+    # Using the GATGraphFeaturizer (for GAT model)
+    # See openadmet.models.features
     type: "GATGraphFeaturizer"
+    # No parameters passed
     params: {}
 
+  # Model specification
   model:
+    # Indicate model type
+    # See openadmet.models.architecture
     type: GATv2Model
+    # Specify model parameters
     params:
       input_dim: 8
       edge_dim: 4
@@ -48,15 +66,22 @@ procedure:
       pooling: "mean"
       output_dim: 1
 
+  # Specify training configuration
   train:
+    # Specify the trainer, here LightningTrainer as GAT is a PyTorch Lightning model
+    # See openadmet.models.trainer
     type: "LightningTrainer"
 
-
+# Section specifying report generation
 report:
+  # Configure evaluation
   eval:
-  - params: {}
-    type: RegressionMetrics
-  - params:
+  # Generate regression metrics
+  - type: RegressionMetrics
+    params: {}
+  # Generate regression plots
+  - type: RegressionPlots
+    params:
       axes_labels:
       - True pChEMBL
       - Predicted pChEMBL
@@ -64,8 +89,9 @@ report:
       min_val: 3
       pXC50: true
       title: Multitask True vs Predicted pChEMBL on test set
-    type: RegressionPlots
-  - params:
+  # Do cross validation, will write out stats to the report directory
+  - type: PytorchLightningRepeatedKFoldCrossValidation
+    params:
       axes_labels:
       - True pChEMBL
       - Predicted pChEMBL
@@ -74,4 +100,3 @@ report:
       pXC50: true
       random_state: 42
       title: Multitask True vs Predicted pChEMBL on test set
-    type: PytorchLightningRepeatedKFoldCrossValidation
