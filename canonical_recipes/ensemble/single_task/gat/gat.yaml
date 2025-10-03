@@ -65,6 +65,12 @@ procedure:
       gat_dropout: 0.1
       pooling: "mean"
       output_dim: 1
+  
+  # Ensemble specification
+  ensemble:
+    type: CommitteeRegressor
+    n_models: 5
+    calibration_method: scaling-factor
 
   # Specify training configuration
   train:
@@ -100,3 +106,12 @@ report:
       pXC50: true
       random_state: 42
       title: Multitask True vs Predicted pChEMBL on test set
+  # Generate uncertainty metrics
+  - type: UncertaintyMetrics
+    params:
+      bins: 100
+      resolution: 99
+      scaled: True
+  # Generate uncertainty calibration plot
+  - type: UncertaintyPlots
+    params: {}

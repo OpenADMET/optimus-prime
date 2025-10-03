@@ -51,6 +51,12 @@ procedure:
       n_tasks: 1 # Number of tasks should match the number of target columns
       from_chemeleon: True # use the pre-trained Chemeleon model, will overwrite the model parameters except FFN
 
+  # Ensemble specification
+  ensemble:
+    type: CommitteeRegressor
+    n_models: 5
+    calibration_method: scaling-factor
+
   # Specify data splits
   split:
     # Specify how data will be split
@@ -98,3 +104,12 @@ report:
       random_state: 42
       pXC50: true
       title: True vs Predicted LogAC50 on test set
+  # Generate uncertainty metrics
+  - type: UncertaintyMetrics
+    params:
+      bins: 100
+      resolution: 99
+      scaled: True
+  # Generate uncertainty calibration plot
+  - type: UncertaintyPlots
+    params: {}

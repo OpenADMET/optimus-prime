@@ -55,10 +55,8 @@ procedure:
       depth: 4
       ffn_hidden_dim: 1024
       ffn_hidden_num_layers: 4
-      message_hidden_dim: 2048
       dropout: 0.2
       batch_norm: True
-      messages: bond
       n_tasks: 4 # Number of tasks should match the number of target columns
       from_chemeleon: True # use the pre-trained Chemeleon model, will overwrite the model parameters except FFN
 

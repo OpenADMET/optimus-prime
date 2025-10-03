@@ -1,14 +1,19 @@
 # Section specifying input data
 data:
-  # Specify the dataset file
-  resource: ../ChEMBL_permissive_CYP3A4_CHEMBL340_aggregated.parquet
+  # Specify the dataset file, can be S3 path etc.
+  resource: ../ChEMBL_pChEMBL_cyp_multitask.parquet
+  # must be intake
   type: intake
-  input_col: OPENADMET_SMILES
-  # Specify each (1+) of the target columns, or the column that you're trying to predict
+  # Specify input column containing SMILES
+  input_col: OPENADMET_CANONICAL_SMILES
+  # Specify whether or not to drop NaN data rows
+  dropna: False
+  # Specify each (1+) of the target columns
   target_cols:
-  - pchembl_value_mean
-  dropna: true
-
+  - OPENADMET_LOGAC50_cyp3a4
+  - OPENADMET_LOGAC50_cyp2d6
+  - OPENADMET_LOGAC50_cyp2c9
+  - OPENADMET_LOGAC50_cyp1a2
 
 # Additional metadata
 metadata:
@@ -16,14 +21,18 @@ metadata:
   email: cynthia.xu@omsf.io
   biotargets:
   - CYP3A4
+  - CYP2D6
+  - CYP2D9
+  - CYP1A2
   build_number: 0
   description: basic regression using a ChemProp multitask task model
   driver: pytorch
   name: chemprop_pchembl
-  tag: chemprop-chembl
+  tag: chemprop
   tags:
   - openadmet
   - test
+  - chemprop
   version: v1
 
 # Section specifying training procedure
@@ -46,14 +55,22 @@ procedure:
       depth: 4
       ffn_hidden_dim: 1024
       ffn_hidden_num_layers: 4
+      message_hidden_dim: 2048
       dropout: 0.2
       batch_norm: True
-      n_tasks: 1 # Number of tasks should match the number of target columns
-      from_chemeleon: True # use the pre-trained Chemeleon model, will overwrite the model parameters except FFN
+      messages: bond
+      n_tasks: 4 # Number of tasks should match the number of target columns
+      from_chemeleon: False
+
+  # Ensemble specification
+  ensemble:
+    type: CommitteeRegressor
+    n_models: 5
+    calibration_method: scaling-factor
 
   # Specify data splits
   split:
-    # Specify how data will be split
+    # Specify how data will be split, can be ShuffleSplitter, ScaffoldSplitter, etc.
     # See openadmet.models.split
     type: ShuffleSplitter
     # Specify split parameters
@@ -97,4 +114,13 @@ report:
       n_splits: 5
       random_state: 42
       pXC50: true
-      title: True vs Predicted LogAC50 on test set
+      title: Multitask True vs Predicted LogAC50 on test set
+  # Generate uncertainty metrics
+  - type: UncertaintyMetrics
+    params:
+      bins: 100
+      resolution: 99
+      scaled: True
+  # Generate uncertainty calibration plot
+  - type: UncertaintyPlots
+    params: {}

@@ -1,4 +1,4 @@
-# Section specifying input data
+# This spection specifies the input data
 data:
   # Specify the dataset file
   resource: ../ChEMBL_permissive_CYP3A4_CHEMBL340_aggregated.parquet
@@ -20,7 +20,7 @@ metadata:
   description: basic regression using a ChemProp multitask task model
   driver: pytorch
   name: chemprop_pchembl
-  tag: chemprop-chembl
+  tag: chemprop-PXR-chembl
   tags:
   - openadmet
   - test
@@ -46,10 +46,18 @@ procedure:
       depth: 4
       ffn_hidden_dim: 1024
       ffn_hidden_num_layers: 4
+      message_hidden_dim: 2048
       dropout: 0.2
       batch_norm: True
+      messages: bond
       n_tasks: 1 # Number of tasks should match the number of target columns
-      from_chemeleon: True # use the pre-trained Chemeleon model, will overwrite the model parameters except FFN
+      from_chemeleon: False
+
+  # Ensemble specification
+  ensemble:
+    type: CommitteeRegressor
+    n_models: 5
+    calibration_method: scaling-factor
 
   # Specify data splits
   split:
@@ -98,3 +106,12 @@ report:
       random_state: 42
       pXC50: true
       title: True vs Predicted LogAC50 on test set
+  # Generate uncertainty metrics
+  - type: UncertaintyMetrics
+    params:
+      bins: 100
+      resolution: 99
+      scaled: True
+  # Generate uncertainty calibration plot
+  - type: UncertaintyPlots
+    params: {}
