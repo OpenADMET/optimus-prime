@@ -45,7 +45,6 @@ procedure:
     params:
       batch_size: 128
       normalize_targets: true
-      shuffle: true
       n_jobs: 4
   
   # Model specification
