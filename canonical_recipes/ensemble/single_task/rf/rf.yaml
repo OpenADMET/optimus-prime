@@ -66,8 +66,8 @@ procedure:
     # Specify split parameters
     params:
       random_state: 42
-      train_size: 0.8
-      val_size: 0.0
+      train_size: 0.7
+      val_size: 0.1 # Validation set is needed for uncertainty calibration
       test_size: 0.2
 
   train:

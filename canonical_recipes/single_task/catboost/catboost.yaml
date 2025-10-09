@@ -59,8 +59,8 @@ procedure:
     # Specify split parameters
     params:
       random_state: 42
-      train_size: 0.7
-      val_size: 0.1 # For ensemble models, validation is used for calibration
+      train_size: 0.8
+      val_size: 0.0 # No validation set is needed
       test_size: 0.2 # If you want to compare tree-based models with Dl models later, the test sizes should match
     
   # Specify training configuration
