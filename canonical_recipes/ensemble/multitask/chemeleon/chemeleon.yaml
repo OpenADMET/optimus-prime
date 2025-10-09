@@ -42,8 +42,11 @@ procedure:
     # Using the ChemPropFeaturizer (for ChemProp model)
     # See openadmet.models.features
     type: ChemPropFeaturizer
-    # No parameters passed
-    params: {}
+    params:
+      batch_size: 128
+      normalize_targets: true
+      shuffle: true
+      n_jobs: 4
   
   # Model specification
   model:
