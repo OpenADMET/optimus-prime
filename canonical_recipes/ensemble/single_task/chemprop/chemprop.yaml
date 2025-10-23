@@ -60,6 +60,7 @@ procedure:
     type: CommitteeRegressor
     n_models: 5
     calibration_method: scaling-factor
+    plot_errbars: True
 
   # Specify data splits
   split:
@@ -98,16 +99,15 @@ report:
   - type: RegressionMetrics
     params: {}
   # Generate regression plots & do cross validation
-  - type: PytorchLightningRepeatedKFoldCrossValidation
+  - type: RegressionPlots
     params:
       axes_labels:
-      - True LogAC50
-      - Predicted LogAC50
-      n_repeats: 5
-      n_splits: 5
-      random_state: 42
+      - True pAC50
+      - Predicted pAC50
+      max_val: 10
+      min_val: 3
       pXC50: true
-      title: True vs Predicted LogAC50 on test set
+      title: True vs Predicted pAC50 on test set
   # Generate uncertainty metrics
   - type: UncertaintyMetrics
     params:
