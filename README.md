@@ -27,16 +27,4 @@ Models that should really only be run on GPU are:
 - Chemprop (DL)
 - TabPFN (huge featurizer)
 
-  
-  
-# `runs/`
-Directory that contains recipe.yaml files and model plots & metric results of note. The structure is as follows:
 
-``` 
-runs/
-├── {target_name}/
-  ├── {model_type}
-    ├── {YYYYMMDD_initials_anvil_training}
-  └── {model_type}
-    └── {YYYYMMDD_initials_anvil_training}
-```
