@@ -72,6 +72,7 @@ procedure:
     type: CommitteeRegressor
     n_models: 5
     calibration_method: scaling-factor
+    plot_errbars: True
 
   # Specify training configuration
   train:
@@ -95,17 +96,6 @@ report:
       max_val: 10
       min_val: 3
       pXC50: true
-      title: Multitask True vs Predicted pChEMBL on test set
-  # Do cross validation, will write out stats to the report directory
-  - type: PytorchLightningRepeatedKFoldCrossValidation
-    params:
-      axes_labels:
-      - True pChEMBL
-      - Predicted pChEMBL
-      n_repeats: 2
-      n_splits: 5
-      pXC50: true
-      random_state: 42
       title: Multitask True vs Predicted pChEMBL on test set
   # Generate uncertainty metrics
   - type: UncertaintyMetrics
