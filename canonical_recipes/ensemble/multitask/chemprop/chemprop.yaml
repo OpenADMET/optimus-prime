@@ -54,20 +54,22 @@ procedure:
     type: ChemPropModel
     # Specify model parameters
     params:
-      depth: 4
-      ffn_hidden_dim: 1024
-      ffn_hidden_num_layers: 4
-      message_hidden_dim: 2048
-      dropout: 0.2
-      batch_norm: True
-      messages: bond
-      n_tasks: 4 # Number of tasks should match the number of target columns
+      ffn_hidden_dim: 512
+      ffn_hidden_num_layers: 3
+      max_lr: 1e-3
+      weight_decay: 1e-4
+      dropout: 0.25
+      batch_norm: False
+      scheduler: noam
+      warmup_epochss: 2
+      n_tasks: 1 # Number of tasks should match the number of target columns
       from_chemeleon: False
 
   # Ensemble specification
   ensemble:
     type: CommitteeRegressor
     n_models: 5
+    use_bagging: True
     calibration_method: scaling-factor
     plot_errbars: True
 
@@ -91,12 +93,13 @@ procedure:
     # Specify model parameters
     params:
       accelerator: gpu
+      monitor_metric: val_loss
+      gradient_clip_val: 0.5
       early_stopping: true
       early_stopping_patience: 10
       early_stopping_mode: min
       early_stopping_min_delta: 0.001
-      max_epochs: 50
-      monitor_metric: val_loss
+      max_epochs: 100
       use_wandb: false
       wandb_project: demos # Specify wandb project name according to guidelines
 

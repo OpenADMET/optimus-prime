@@ -54,11 +54,17 @@ procedure:
     type: ChemPropModel
     # Specify model parameters
     params:
-      depth: 4
-      ffn_hidden_dim: 1024
-      ffn_hidden_num_layers: 4
-      dropout: 0.2
-      batch_norm: True
+      ffn_hidden_dim: 512
+      ffn_hidden_num_layers: 3
+      mpnn_lr: 1e-4
+      ffn_lr: 1e-3
+      mpnn_weight_decay: 0
+      ffn_weight_decay: 1e-4
+      dropout: 0.25
+      batch_norm: False
+      scheduler: plateau
+      reduce_lr_patience: 5
+      reduce_lr_factor: 0.5
       n_tasks: 4 # Number of tasks should match the number of target columns
       from_chemeleon: True # use the pre-trained Chemeleon model, will overwrite the model parameters except FFN
 
@@ -82,12 +88,13 @@ procedure:
     # Specify model parameters
     params:
       accelerator: gpu
+      monitor_metric: val_loss
+      gradient_clip_val: 0.5
       early_stopping: true
-      early_stopping_patience: 10
+      early_stopping_patience: 20
       early_stopping_mode: min
       early_stopping_min_delta: 0.001
-      max_epochs: 50
-      monitor_metric: val_loss
+      max_epochs: 100
       use_wandb: false
       wandb_project: demos # Specify wandb project name according to guidelines
 
