@@ -54,13 +54,13 @@ procedure:
     type: ChemPropModel
     # Specify model parameters
     params:
-      ffn_hidden_dim: 512
+      ffn_hidden_dim: 1024
       ffn_hidden_num_layers: 3
-      mpnn_lr: 1e-4
+      mpnn_lr: 1e-3
       ffn_lr: 1e-3
       mpnn_weight_decay: 0
       ffn_weight_decay: 1e-4
-      dropout: 0.25
+      dropout: 0.1
       batch_norm: False
       scheduler: plateau
       reduce_lr_patience: 5
