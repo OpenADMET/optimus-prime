@@ -14,7 +14,6 @@ canonical_recipes/
 ├── single_task/
   ├── chemeleon
   ├── chemprop
-  ├── gat # still in progress
   ├── lgbm
   ├── tabpfn # still in progress
   └── xgboost
