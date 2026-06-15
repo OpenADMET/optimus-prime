@@ -55,7 +55,7 @@ procedure:
     # Specify model parameters
     params:
       ffn_hidden_dim: 1024
-      ffn_hidden_num_layers: 3
+      ffn_num_layers: 3
       mpnn_lr: 1e-3
       ffn_lr: 1e-3
       mpnn_weight_decay: 0

@@ -46,13 +46,13 @@ procedure:
     # Specify model parameters
     params:
       ffn_hidden_dim: 1024
-      ffn_hidden_num_layers: 3
+      ffn_num_layers: 3
       mpnn_lr: 1e-3
       weight_decay: 1e-4
       dropout: 0.1
       batch_norm: False
       scheduler: noam
-      warmup_epochss: 2
+      warmup_epochs: 2
       n_tasks: 1 # Number of tasks should match the number of target columns
       from_chemeleon: False
 

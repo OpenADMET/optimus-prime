@@ -47,7 +47,7 @@ procedure:
     # Specify model parameters
     params:
       ignore_pretraining_limits: True
-      device: cuda
+      accelerator: cuda
 
   # Specify data splits
   split:

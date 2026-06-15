@@ -49,7 +49,7 @@ procedure:
     type: LGBMRegressorModel
     # Specify model parameters
     params:
-      alpha: 0.005
+      reg_alpha: 0.005
       learning_rate: 0.05
       n_estimators: 500
 
