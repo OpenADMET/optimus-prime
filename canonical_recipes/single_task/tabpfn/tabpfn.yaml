@@ -31,6 +31,8 @@ metadata:
 
 # Section specifying training procedure
 procedure:
+  # Global seed; any section without its own random_seed inherits this
+  random_seed: 42
   # Featurization specification
   feat:
     # Using DescriptorFeaturizer for 2D descriptors
@@ -53,7 +55,7 @@ procedure:
   split:
     # Specify split parameters
     params:
-      random_state: 42
+      random_seed: 42
       train_size: 0.8
       val_size: 0.0 # No validation set is needed
       test_size: 0.2
@@ -95,5 +97,5 @@ report:
       n_repeats: 5
       n_splits: 2
       pXC50: true
-      random_state: 42
+      random_seed: 42
       title: CYP3A4 True vs Predicted pChEMBL on test set

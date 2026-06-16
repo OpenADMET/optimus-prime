@@ -28,6 +28,8 @@ metadata:
 
 # Section specifying training procedure
 procedure:
+  # Global seed; any section without its own random_seed inherits this
+  random_seed: 42
 # Featurization specification
   feat:
     # Using concatenated features, which combines multiple featurizers
@@ -58,7 +60,7 @@ procedure:
     type: ShuffleSplitter
     # Specify split parameters
     params:
-      random_state: 42
+      random_seed: 42
       train_size: 0.8
       val_size: 0.0 # No validation set is needed
       test_size: 0.2 # If you want to compare tree-based models with Dl models later, the test sizes should match
