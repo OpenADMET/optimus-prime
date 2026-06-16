@@ -37,6 +37,8 @@ procedure:
       batch_size: 128
       normalize_targets: true
       n_jobs: 4
+      # Shuffle training batches each epoch; eval and inference loaders stay ordered
+      shuffle: true
   
   # Model specification
   model:
