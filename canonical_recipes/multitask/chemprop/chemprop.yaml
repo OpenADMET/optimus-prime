@@ -71,7 +71,6 @@ procedure:
       scheduler: noam
       warmup_epochs: 2
       n_tasks: 1 # Number of tasks should match the number of target columns
-      from_chemeleon: False
 
   # Specify data splits
   split:
