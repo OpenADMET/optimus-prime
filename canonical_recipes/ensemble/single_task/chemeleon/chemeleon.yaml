@@ -65,7 +65,7 @@ procedure:
       reduce_lr_patience: 5
       reduce_lr_factor: 0.5
       n_tasks: 1 # Number of tasks should match the number of target columns
-      from_chemeleon: True # use the pre-trained Chemeleon model, will overwrite the model parameters except FFN
+      from_foundation: chemeleon # use the pre-trained Chemeleon model, will overwrite the model parameters except FFN
 
   # Ensemble specification
   ensemble:
