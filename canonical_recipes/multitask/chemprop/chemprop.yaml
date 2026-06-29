@@ -70,7 +70,7 @@ procedure:
       batch_norm: False
       scheduler: noam
       warmup_epochs: 2
-      n_tasks: 1 # Number of tasks should match the number of target columns
+      n_tasks: 4 # Number of tasks must match the number of target columns (4 CYP targets)
 
   # Specify data splits
   split:

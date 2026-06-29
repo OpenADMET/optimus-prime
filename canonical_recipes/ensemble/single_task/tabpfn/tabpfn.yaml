@@ -48,6 +48,10 @@ procedure:
     type: TabPFNRegressorModel
     # Specify model parameters
     params:
+      # This dataset (~15.8k rows) exceeds TabPFN's 10k-sample pretraining limit,
+      # so the limit must be bypassed for the model to fit. Note: TabPFN performance
+      # is not validated by its authors beyond 10k samples / 500 features; for
+      # routinely larger datasets, prefer a model that scales (e.g. LGBM/XGBoost).
       ignore_pretraining_limits: True
       accelerator: cuda
 
