@@ -31,6 +31,8 @@ metadata:
 
 # Section specifying training procedure
 procedure:
+  # Global seed; any section without its own random_seed inherits this
+  random_seed: 42
   # Featurization specification
   feat:
     # Using DescriptorFeaturizer for 2D descriptors
@@ -46,14 +48,18 @@ procedure:
     type: TabPFNRegressorModel
     # Specify model parameters
     params:
+      # This dataset (~15.8k rows) exceeds TabPFN's 10k-sample pretraining limit,
+      # so the limit must be bypassed for the model to fit. Note: TabPFN performance
+      # is not validated by its authors beyond 10k samples / 500 features; for
+      # routinely larger datasets, prefer a model that scales (e.g. LGBM/XGBoost).
       ignore_pretraining_limits: True
-      device: cuda
+      accelerator: cuda
 
   # Specify data splits
   split:
     # Specify split parameters
     params:
-      random_state: 42
+      random_seed: 42
       train_size: 0.8
       val_size: 0.0 # No validation set is needed
       test_size: 0.2
@@ -93,7 +99,7 @@ report:
       max_val: 10
       min_val: 3
       n_repeats: 5
-      n_splits: 2
+      n_splits: 5 # Match the 5-fold CV used by all other recipes for comparable metrics; TabPFN is GPU-bound, so expect a longer CV runtime than the tree-based models
       pXC50: true
-      random_state: 42
+      random_seed: 42
       title: CYP3A4 True vs Predicted pChEMBL on test set

@@ -37,6 +37,8 @@ metadata:
 
 # Section specifying training procedure
 procedure:
+  # Global seed; any section without its own random_seed inherits this
+  random_seed: 42
   # Featurization specification
   feat:
     # Using the ChemPropFeaturizer (for ChemProp model)
@@ -46,6 +48,10 @@ procedure:
       batch_size: 128
       normalize_targets: true
       n_jobs: 4
+      # Shuffle training batches each epoch; eval and inference loaders stay ordered
+      shuffle: true
+      # Per-section override (redundant with global; shown for illustration)
+      random_seed: 42
   
   # Model specification
   model:
@@ -54,16 +60,17 @@ procedure:
     type: ChemPropModel
     # Specify model parameters
     params:
+      # Per-section override (redundant with global; shown for illustration)
+      random_seed: 42
       ffn_hidden_dim: 1024
-      ffn_hidden_num_layers: 3
+      ffn_num_layers: 3
       mpnn_lr: 1e-3
       weight_decay: 1e-4
       dropout: 0.1
       batch_norm: False
       scheduler: noam
-      warmup_epochss: 2
-      n_tasks: 1 # Number of tasks should match the number of target columns
-      from_chemeleon: False
+      warmup_epochs: 2
+      n_tasks: 4 # Number of tasks must match the number of target columns (4 CYP targets)
 
   # Ensemble specification
   ensemble:
@@ -80,7 +87,7 @@ procedure:
     type: ShuffleSplitter
     # Specify split parameters
     params:
-      random_state: 42
+      random_seed: 42
       train_size: 0.7
       val_size: 0.1
       test_size: 0.2

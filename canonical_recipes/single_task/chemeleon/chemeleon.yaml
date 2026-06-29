@@ -28,6 +28,8 @@ metadata:
 
 # Section specifying training procedure
 procedure:
+  # Global seed; any section without its own random_seed inherits this
+  random_seed: 42
   # Featurization specification
   feat:
     # Using the ChemPropFeaturizer (for ChemProp model)
@@ -37,6 +39,10 @@ procedure:
       batch_size: 128
       normalize_targets: true
       n_jobs: 4
+      # Shuffle training batches each epoch; eval and inference loaders stay ordered
+      shuffle: true
+      # Per-section override (redundant with global; shown for illustration)
+      random_seed: 42
   
   # Model specification
   model:
@@ -45,8 +51,10 @@ procedure:
     type: ChemPropModel
     # Specify model parameters
     params:
+      # Per-section override (redundant with global; shown for illustration)
+      random_seed: 42
       ffn_hidden_dim: 1024
-      ffn_hidden_num_layers: 3
+      ffn_num_layers: 3
       mpnn_lr: 1e-3
       ffn_lr: 1e-3
       mpnn_weight_decay: 0
@@ -57,7 +65,7 @@ procedure:
       reduce_lr_patience: 5
       reduce_lr_factor: 0.5
       n_tasks: 1 # Number of tasks should match the number of target columns
-      from_chemeleon: True # use the pre-trained Chemeleon model, will overwrite the model parameters except FFN
+      from_foundation: chemeleon # use the pre-trained Chemeleon model, will overwrite the model parameters except FFN
 
   # Specify data splits
   split:
@@ -66,7 +74,7 @@ procedure:
     type: ShuffleSplitter
     # Specify split parameters
     params:
-      random_state: 42
+      random_seed: 42
       train_size: 0.7
       val_size: 0.1
       test_size: 0.2
@@ -104,6 +112,6 @@ report:
       - Predicted LogAC50
       n_repeats: 5
       n_splits: 5
-      random_state: 42
+      random_seed: 42
       pXC50: true
       title: True vs Predicted LogAC50 on test set
