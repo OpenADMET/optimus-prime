@@ -62,14 +62,23 @@ procedure:
     params:
       # Per-section override (redundant with global; shown for illustration)
       random_seed: 42
-      ffn_hidden_dim: 1024
-      ffn_num_layers: 3
-      mpnn_lr: 1e-3
-      weight_decay: 1e-4
+      messages: bond
+      aggregation: mean
+      depth: 3
+      message_hidden_dim: 300
+      ffn_hidden_dim: 300
+      ffn_num_layers: 1
+      normalized_targets: True
       dropout: 0.1
       batch_norm: False
-      scheduler: noam
-      warmup_epochs: 2
+      scheduler: plateau
+      reduce_lr_patience: 5
+      reduce_lr_factor: 0.5
+      mpnn_lr: 1e-3
+      ffn_lr: 1e-3
+      weight_decay: 1e-4
+      monitor_metric: val_loss
+      monitor_metric_mode: min
       n_tasks: 4 # Number of tasks must match the number of target columns (4 CYP targets)
 
   # Specify data splits
@@ -95,10 +104,11 @@ procedure:
       monitor_metric: val_loss
       gradient_clip_val: 0.5
       early_stopping: true
-      early_stopping_patience: 10
+      early_stopping_patience: 20
       early_stopping_mode: min
       early_stopping_min_delta: 0.001
       max_epochs: 100
+      deterministic: False
       use_wandb: false
       wandb_project: demos # Specify wandb project name according to guidelines
 
@@ -108,7 +118,8 @@ report:
   eval:
   # Generate regression metrics
   - type: RegressionMetrics
-    params: {}
+    params:
+      pXC50: False
   # Generate regression plots & do cross validation
   - type: PytorchLightningRepeatedKFoldCrossValidation
     params:
@@ -118,5 +129,5 @@ report:
       n_repeats: 5
       n_splits: 5
       random_seed: 42
-      pXC50: true
+      pXC50: False
       title: Multitask True vs Predicted LogAC50 on test set
