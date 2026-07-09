@@ -51,6 +51,8 @@ procedure:
     type: XGBRegressorModel
     # Specify model parameters
     params:
+      # alpha is the L1 regularization term (XGBoost's native name; sklearn alias: reg_alpha).
+      # Equivalent to the LGBM recipe's `reg_alpha` param; both recipes use 0.005.
       alpha: 0.005
       learning_rate: 0.05
       n_estimators: 500

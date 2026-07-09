@@ -67,7 +67,10 @@ procedure:
   ensemble:
     type: CommitteeRegressor
     n_models: 5
-    use_bagging: False
+    use_bagging: True
+    # Seed for per-member bootstrap resampling (member i samples with bootstrap_seed + i).
+    # Only has an effect when use_bagging: True; defaults to random_seed (42) if omitted.
+    bootstrap_seed: 42
     calibration_method: scaling-factor
     plot_errbars: True
 

@@ -51,6 +51,8 @@ procedure:
     type: LGBMRegressorModel
     # Specify model parameters
     params:
+      # reg_alpha is the L1 regularization term (LightGBM alias: lambda_l1).
+      # Equivalent to XGBoost's `alpha` param; both recipes use 0.005.
       reg_alpha: 0.005
       learning_rate: 0.05
       n_estimators: 500
