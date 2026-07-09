@@ -37,6 +37,8 @@ metadata:
 
 # Section specifying training procedure
 procedure:
+  # Global seed; any section without its own random_seed inherits this
+  random_seed: 42
   # Featurization specification
   feat:
     # Using the ChemPropFeaturizer (for ChemProp model)
@@ -46,6 +48,10 @@ procedure:
       batch_size: 128
       normalize_targets: true
       n_jobs: 4
+      # Shuffle training batches each epoch; eval and inference loaders stay ordered
+      shuffle: true
+      # Per-section override (redundant with global; shown for illustration)
+      random_seed: 42
   
   # Model specification
   model:
@@ -54,19 +60,28 @@ procedure:
     type: ChemPropModel
     # Specify model parameters
     params:
+      # Per-section override (redundant with global; shown for illustration)
+      random_seed: 42
+      messages: bond
+      aggregation: mean
+      depth: 6
+      message_hidden_dim: 2048
       ffn_hidden_dim: 1024
-      ffn_hidden_num_layers: 3
-      mpnn_lr: 1e-3
-      ffn_lr: 1e-3
-      mpnn_weight_decay: 0
-      ffn_weight_decay: 1e-4
+      ffn_num_layers: 3
+      normalized_targets: True
       dropout: 0.1
       batch_norm: False
       scheduler: plateau
       reduce_lr_patience: 5
       reduce_lr_factor: 0.5
+      mpnn_lr: 1e-3
+      ffn_lr: 1e-3
+      mpnn_weight_decay: 0
+      ffn_weight_decay: 1e-4
+      monitor_metric: val_loss
+      monitor_metric_mode: min
       n_tasks: 4 # Number of tasks should match the number of target columns
-      from_chemeleon: True # use the pre-trained Chemeleon model, will overwrite the model parameters except FFN
+      from_foundation: chemeleon # use the pre-trained Chemeleon model, will overwrite the model parameters except FFN
 
   # Specify data splits
   split:
@@ -75,7 +90,7 @@ procedure:
     type: ShuffleSplitter
     # Specify split parameters
     params:
-      random_state: 42
+      random_seed: 42
       train_size: 0.7
       val_size: 0.1
       test_size: 0.2
@@ -95,6 +110,7 @@ procedure:
       early_stopping_mode: min
       early_stopping_min_delta: 0.001
       max_epochs: 100
+      deterministic: False
       use_wandb: false
       wandb_project: demos # Specify wandb project name according to guidelines
 
@@ -104,7 +120,8 @@ report:
   eval:
   # Generate regression metrics
   - type: RegressionMetrics
-    params: {}
+    params:
+      pXC50: False
   # Generate regression plots & do cross validation, will write out stats to the report directory
   - type: PytorchLightningRepeatedKFoldCrossValidation
     params:
@@ -113,6 +130,6 @@ report:
       - Predicted LogAC50
       n_repeats: 5
       n_splits: 5
-      random_state: 42
-      pXC50: true
+      random_seed: 42
+      pXC50: False
       title: Multitask True vs Predicted LogAC50 on test set

@@ -28,6 +28,8 @@ metadata:
 
 # Section specifying training procedure
 procedure:
+  # Global seed; any section without its own random_seed inherits this
+  random_seed: 42
 # Featurization specification
   feat:
     # Using concatenated features, which combines multiple featurizers
@@ -49,6 +51,8 @@ procedure:
     type: XGBRegressorModel
     # Specify model parameters
     params:
+      # alpha is the L1 regularization term (XGBoost's native name; sklearn alias: reg_alpha).
+      # Equivalent to the LGBM recipe's `reg_alpha` param; both recipes use 0.005.
       alpha: 0.005
       learning_rate: 0.05
       n_estimators: 500
@@ -60,7 +64,7 @@ procedure:
     type: ShuffleSplitter
     # Specify split parameters
     params:
-      random_state: 42
+      random_seed: 42
       train_size: 0.8
       val_size: 0.0 # No validation set is needed
       test_size: 0.2 # If you want to compare tree-based models with Dl models later, the test sizes should match

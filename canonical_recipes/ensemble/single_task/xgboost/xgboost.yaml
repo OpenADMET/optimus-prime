@@ -28,6 +28,8 @@ metadata:
 
 # Section specifying training procedure
 procedure:
+  # Global seed; any section without its own random_seed inherits this
+  random_seed: 42
 # Featurization specification
   feat:
     # Using concatenated features, which combines multiple featurizers
@@ -49,6 +51,8 @@ procedure:
     type: XGBRegressorModel
     # Specify model parameters
     params:
+      # alpha is the L1 regularization term (XGBoost's native name; sklearn alias: reg_alpha).
+      # Equivalent to the LGBM recipe's `reg_alpha` param; both recipes use 0.005.
       alpha: 0.005
       learning_rate: 0.05
       n_estimators: 500
@@ -57,6 +61,10 @@ procedure:
   ensemble:
     type: CommitteeRegressor
     n_models: 5
+    use_bagging: True
+    # Seed for per-member bootstrap resampling (member i samples with bootstrap_seed + i).
+    # Only has an effect when use_bagging: True; defaults to random_seed (42) if omitted.
+    bootstrap_seed: 42
     calibration_method: scaling-factor
     plot_errbars: True
 
@@ -67,7 +75,7 @@ procedure:
     type: ShuffleSplitter
     # Specify split parameters
     params:
-      random_state: 42
+      random_seed: 42
       train_size: 0.7
       val_size: 0.1 # Validation set is needed for uncertainty calibration
       test_size: 0.2 # If you want to compare tree-based models with Dl models later, the test sizes should match
