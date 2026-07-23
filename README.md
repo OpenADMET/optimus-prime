@@ -1,8 +1,11 @@
 <div style="text-align: left">
-<img src="optimus.png" alt="lil robot guy" width="200"/>  
+<img src="optimus.png" alt="lil robot guy" width="200"/>
 </div>
 
-# Canonical recipes 
+# Canonical recipes
+
+[![DOI](https://zenodo.org/badge/1032724010.svg)](https://doi.org/10.5281/zenodo.21504162)
+
 Directory that contains all the prime examples of Anvil recipe.yamls for each model in the OpenADMET suite.  
 
 Current available models are:
