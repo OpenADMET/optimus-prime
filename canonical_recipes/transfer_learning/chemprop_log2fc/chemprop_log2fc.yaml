@@ -1,0 +1,137 @@
+# Stage 1 of 2: the auxiliary log2FC encoder.
+#
+# Trains a two-task ChemProp network on primary-screen log2 fold change. This
+# model is never scored on its own. Stage 2 loads it frozen through a
+# TrainedModelFeaturizer and uses its predictions as two feature columns, so
+# what matters here is that the network learns a useful representation of the
+# primary screen, not that it wins on its own test split.
+#
+# Run this first, and pin the output directory, because stage 2 refers to it
+# by path:
+#
+#   openadmet anvil --recipe-path chemprop_log2fc.yaml \
+#       --output-dir chemprop_log2fc_model
+
+# Section specifying input data
+data:
+  # Primary-screen log2FC, pivoted to one row per compound and one column per
+  # concentration arm; see ../README.md for provenance
+  resource: ../PXR_log2fc_single_concentration.parquet
+  # must be intake
+  type: intake
+  # Specify input column containing SMILES
+  input_col: OPENADMET_SMILES
+  # Specify each (1+) of the target columns, or the column that you're trying to predict
+  target_cols:
+  - OPENADMET_LOG2FC_8_25uM
+  - OPENADMET_LOG2FC_33uM
+  # Keep NaN rows: 1,390 of 10,830 compounds were screened at only one
+  # concentration, and ChemProp masks a missing target out of the loss rather
+  # than discarding the row's other arm
+  dropna: False
+
+# Additional metadata
+metadata:
+  authors: Sean M Colby
+  email: sean.colby@omsf.io
+  biotargets:
+  - PXR
+  build_number: 0
+  description: two-task ChemProp regression on PXR primary-screen log2FC, used as a frozen featurizer by the stage 2 recipe
+  driver: pytorch
+  name: pxr_log2fc_chemprop
+  tag: openadmet-PXR-log2fc-chemprop
+  tags:
+  - openadmet
+  - PXR
+  - log2fc
+  - transfer-learning
+  version: v1
+
+# Section specifying training procedure
+procedure:
+  # Global seed; any section without its own random_seed inherits this
+  random_seed: 42
+
+  # Featurization specification
+  feat:
+    # Using the ChemPropFeaturizer (for ChemProp model)
+    # See openadmet.models.features
+    type: ChemPropFeaturizer
+    params:
+      batch_size: 64
+      normalize_targets: true
+      n_jobs: 4
+      # Shuffle training batches each epoch; eval and inference loaders stay ordered
+      shuffle: true
+
+  # Model specification
+  model:
+    # Indicate model type
+    # See openadmet.models.architecture
+    type: ChemPropModel
+    # Specify model parameters
+    params:
+      # Number of tasks must match the number of target columns (2 concentration arms)
+      n_tasks: 2
+      messages: bond
+      aggregation: mean
+      depth: 3
+      message_hidden_dim: 256
+      ffn_hidden_dim: 512
+      ffn_num_layers: 2
+      normalized_targets: True
+      dropout: 0.0
+      batch_norm: False
+      # Noam wants a known epoch budget and gets one from max_epochs below.
+      # The other recipes here run plateau because they early-stop against an
+      # open-ended budget; this one keeps the schedule the PXR analysis used,
+      # and early stopping only ends the run sooner than the schedule expects
+      scheduler: noam
+      warmup_epochs: 2
+      max_lr: 1e-3
+      weight_decay: 0.0
+      monitor_metric: val_loss
+      monitor_metric_mode: min
+
+  # Specify data splits
+  split:
+    # Specify how data will be split
+    # See openadmet.models.split
+    type: ShuffleSplitter
+    # Specify split parameters
+    params:
+      random_seed: 42
+      train_size: 0.7
+      val_size: 0.1
+      test_size: 0.2
+
+  # Specify training configuration
+  train:
+    # Specify the trainer, here LightningTrainer as ChemProp is a PyTorch Lightning model
+    # See openadmet.models.trainer
+    type: LightningTrainer
+    # Specify model parameters
+    params:
+      accelerator: gpu
+      gradient_clip_val: 1.0
+      early_stopping: true
+      early_stopping_patience: 10
+      early_stopping_mode: min
+      early_stopping_min_delta: 0.001
+      max_epochs: 30
+      deterministic: False
+      use_wandb: false
+      wandb_project: demos # Specify wandb project name according to guidelines
+
+# Section specifying report generation
+report:
+  # Configure evaluation
+  eval:
+  # Generate regression metrics
+  # No cross validation here: this network is a featurizer for stage 2, and
+  # refitting it five times over would cost GPU hours to score a model that is
+  # never read on its own
+  - type: RegressionMetrics
+    params:
+      pXC50: False

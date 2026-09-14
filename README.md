@@ -23,11 +23,20 @@ canonical_recipes/
   └── catboost
   └── random forest
   └── dummy
+├── transfer_learning/ # two-stage; see its README
+  ├── chemprop_log2fc
+  └── tabicl_pec50
 ```
 Models that should really only be run on GPU are:
 - Chemeleon (DL)
 - Chemprop (DL)
 - TabPFN (huge featurizer)
+- TabICL (huge featurizer)
+
+`transfer_learning/` is the one recipe folder whose two YAMLs are not
+alternatives. They are ordered stages of a single pipeline, and the second reads
+the model the first writes. See
+[its README](canonical_recipes/transfer_learning/README.md) for the run order.
 
 ## Data splitting (random vs. scaffold)
 

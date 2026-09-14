@@ -1,0 +1,139 @@
+# Stage 2 of 2: the dose-response model that consumes the log2FC encoder.
+#
+# Features are a CheMeleon embedding PCA-reduced to 256 components, concatenated
+# with the two log2FC predictions the stage 1 network emits, giving TabICL 258
+# columns. This is the configuration the PXR challenge analysis carried forward;
+# see ../README.md for what each ingredient contributes and what it was measured
+# against.
+#
+# Stage 1 must have run first, and model_dir below must point at its output:
+#
+#   openadmet anvil --recipe-path tabicl_pec50.yaml
+
+# Section specifying input data
+data:
+  # Pooled dose-response pEC50 across the challenge train and both unblinded
+  # phases; see ../README.md for provenance
+  resource: ../PXR_pEC50_dose_response.parquet
+  # must be intake
+  type: intake
+  # Specify input column containing SMILES
+  input_col: OPENADMET_SMILES
+  # Specify each (1+) of the target columns, or the column that you're trying to predict
+  target_cols:
+  - OPENADMET_PEC50
+  # Specify whether or not to drop NaN data rows
+  dropna: true
+
+# Additional metadata
+metadata:
+  authors: Sean M Colby
+  email: sean.colby@omsf.io
+  biotargets:
+  - PXR
+  build_number: 0
+  description: PXR pEC50 regression with TabICL over a PCA-reduced CheMeleon embedding concatenated with frozen log2FC predictions
+  driver: sklearn
+  name: pxr_pec50_tabicl
+  tag: openadmet-PXR-pec50-tabicl
+  tags:
+  - openadmet
+  - PXR
+  - pec50
+  - tabicl
+  - transfer-learning
+  version: v1
+
+# Section specifying training procedure
+procedure:
+  # Global seed; any section without its own random_seed inherits this
+  random_seed: 42
+
+  # Featurization specification
+  feat:
+    # Using concatenated features, which combines multiple featurizers
+    # See openadmet.models.features
+    type: FeatureConcatenator
+    params:
+      featurizers:
+        # Off-the-shelf CheMeleon encoder, 2,048 pooled MPNN dimensions. The
+        # log2FC-fine-tuned embedding was nominally better in the analysis but
+        # statistically tied, and it would need a third trained model to ship
+        - type: CheMeleonEmbeddingFeaturizer
+          params:
+            batch_size: 256
+            accelerator: auto
+        # The frozen stage 1 network, emitting one column per concentration arm.
+        # Relative to this recipe file, so stage 1 must have been run with
+        # --output-dir chemprop_log2fc_model
+        - type: TrainedModelFeaturizer
+          params:
+            model_dir: ../chemprop_log2fc/chemprop_log2fc_model
+            accelerator: auto
+
+  # Transform specification, fitted on train rows only and reapplied at inference
+  # See openadmet.models.transforms
+  transform:
+  - type: PCATransform
+    params:
+      # Blocks are keyed and ordered by featurizer class name, so the CheMeleon
+      # block comes first here regardless of the order listed above. Reductions
+      # to 256, 384 and 512 were statistically tied in the analysis and 256 is
+      # the cheapest of them; below 128 was clearly worse
+      n_components:
+        CheMeleonEmbeddingFeaturizer: 256
+        # Passed through unreduced: two columns that each mean a specific
+        # concentration's log2FC, which a PCA would rotate into linear
+        # combinations without reducing the width at all
+        TrainedModelFeaturizer: null
+      random_seed: 42
+
+  # Model specification
+  model:
+    # Indicate model type
+    # See openadmet.models.architecture
+    type: TabICLRegressorModel
+    # Specify model parameters
+    params:
+      random_seed: 42
+      n_estimators: 8
+      # TabICL at 258 columns over ~4.6k rows may exceed a 24 GB card and fall
+      # back to CPU, which costs minutes rather than seconds per fit
+      accelerator: auto
+
+  # Specify data splits
+  split:
+    # Specify how data will be split, can be ShuffleSplitter, ScaffoldSplitter, etc.
+    # See openadmet.models.split
+    type: ShuffleSplitter
+    # Specify split parameters
+    params:
+      random_seed: 42
+      train_size: 0.7
+      val_size: 0.1
+      test_size: 0.2
+
+  # Specify training configuration
+  train:
+    # Specify the trainer, here SKLearnBasicTrainer for sklearn models
+    # See openadmet.models.trainer
+    type: SKLearnBasicTrainer
+
+# Section specifying report generation
+report:
+  # Configure evaluation
+  eval:
+  # Generate regression metrics
+  - type: RegressionMetrics
+    params:
+      pXC50: True
+  # Generate regression plots
+  - type: RegressionPlots
+    params:
+      axes_labels:
+      - True pEC50
+      - Predicted pEC50
+      max_val: 8
+      min_val: 2
+      pXC50: True
+      title: PXR True vs Predicted pEC50 on test set
