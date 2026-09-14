@@ -1,20 +1,13 @@
-# Stage 1 of 2: the auxiliary log2FC encoder.
-#
-# Trains a two-task ChemProp network on primary-screen log2 fold change. This
-# model is never scored on its own. Stage 2 loads it frozen through a
-# TrainedModelFeaturizer and uses its predictions as two feature columns, so
-# what matters here is the representation it learns, not a test metric.
-#
-# Run this first, and pin the output directory, because stage 2 refers to it
-# by path:
+# Stage 1 of 2: a two-task ChemProp encoder on primary-screen log2FC.
+# Never scored on its own; stage 2 reads it frozen. Run first, and pin the
+# output directory, because stage 2 refers to it by path:
 #
 #   openadmet anvil --recipe-path chemprop_log2fc.yaml \
 #       --output-dir chemprop_log2fc_model
 
 # Section specifying input data
 data:
-  # Primary-screen log2FC, pivoted to one row per compound and one column per
-  # concentration arm; see ../README.md for provenance
+  # One row per compound, one column per concentration arm
   resource: ../PXR_log2fc_single_concentration.parquet
   # must be intake
   type: intake
@@ -24,9 +17,8 @@ data:
   target_cols:
   - OPENADMET_LOG2FC_8_25uM
   - OPENADMET_LOG2FC_33uM
-  # Keep NaN rows: 1,390 of 10,830 compounds were screened at only one
-  # concentration, and ChemProp masks a missing target out of the loss rather
-  # than discarding the row's other arm
+  # 1,390 compounds were screened at one concentration only; ChemProp masks the
+  # missing target out of the loss rather than dropping the row's other arm
   dropna: False
 
 # Additional metadata
@@ -54,7 +46,6 @@ procedure:
 
   # Featurization specification
   feat:
-    # Using the ChemPropFeaturizer (for ChemProp model)
     # See openadmet.models.features
     type: ChemPropFeaturizer
     params:
@@ -66,12 +57,10 @@ procedure:
 
   # Model specification
   model:
-    # Indicate model type
     # See openadmet.models.architecture
     type: ChemPropModel
-    # Specify model parameters
     params:
-      # Number of tasks must match the number of target columns (2 concentration arms)
+      # Must match the number of target columns
       n_tasks: 2
       messages: bond
       aggregation: mean
@@ -82,28 +71,21 @@ procedure:
       normalized_targets: True
       dropout: 0.0
       batch_norm: False
-      # Noam calibrates its decay against the trainer's max_epochs, which here
-      # is the 5-epoch budget below: the rate ramps for 2 epochs and decays to
-      # its floor over the remaining 3. The other ChemProp recipes here run
-      # plateau because they early-stop against an open-ended budget
+      # Noam calibrates its decay against max_epochs below: ramp for 2 epochs,
+      # decay to the floor over the remaining 3
       scheduler: noam
       warmup_epochs: 2
       max_lr: 1e-3
       weight_decay: 0.0
-      # No validation split below, so the trainer monitors training loss;
-      # naming it here keeps the recipe honest about what gets checkpointed
+      # No validation split, so the trainer checkpoints on training loss
       monitor_metric: train_loss
       monitor_metric_mode: min
 
   # Specify data splits
   split:
-    # Specify how data will be split
     # See openadmet.models.split
     type: ShuffleSplitter
-    # Every compound trains the encoder. The analysis this follows held out 20%
-    # to early-stop, then reinitialized and retrained on the full pool for the
-    # epoch count that produced; this skips the search and trains on everything
-    # at the epoch count those runs settled on
+    # Every compound trains the encoder, as in the analysis's refit pass
     params:
       random_seed: 42
       train_size: 1.0
@@ -112,16 +94,13 @@ procedure:
 
   # Specify training configuration
   train:
-    # Specify the trainer, here LightningTrainer as ChemProp is a PyTorch Lightning model
     # See openadmet.models.trainer
     type: LightningTrainer
-    # Specify model parameters
     params:
       accelerator: gpu
       gradient_clip_val: 1.0
-      # Early stopping needs a validation loss and there is no validation split.
-      # The budget is instead the epoch count the analysis's own refits used:
-      # its five seeds settled on 7, 5, 3, 7 and 5 epochs, so 5 is the median
+      # The analysis's five refits ran 7, 5, 3, 7 and 5 epochs; 5 is the median.
+      # Early stopping would need a validation loss, and there is no val split
       early_stopping: false
       max_epochs: 5
       deterministic: False
@@ -130,6 +109,5 @@ procedure:
 
 # Section specifying report generation
 report:
-  # No evaluation: there is no test split to score, and this network is read
-  # only through stage 2
+  # Nothing to score: no test split, and this network is read only by stage 2
   eval: []

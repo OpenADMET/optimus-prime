@@ -1,33 +1,29 @@
 # Transfer learning from a primary screen
 
-A two-stage recipe that reuses an abundant, cheap assay readout to sharpen
-predictions on a scarce, expensive one. Stage 1 trains a ChemProp network on
-single-concentration primary-screen log<sub>2</sub> fold change
-(log<sub>2</sub>FC). Stage 2 freezes that network, reads its predictions as two
-feature columns, concatenates them with a CheMeleon embedding reduced by
-principal component analysis (PCA), and fits TabICL to dose-response
+Two stages. The first trains a ChemProp network on primary-screen
+log<sub>2</sub> fold change (log<sub>2</sub>FC). The second freezes it, reads its
+predictions as two feature columns, concatenates them with a CheMeleon embedding
+reduced to 256 principal components, and fits TabICL to dose-response
 pEC<sub>50</sub>.
 
-The configuration comes from the OpenADMET pregnane X receptor (PXR) blind
-challenge analysis, and these recipes fit and score on the partitions that
-analysis used, so their numbers are comparable to the ones it published. Full
-write-up and supporting code:
-[pxr-challenge-tabicl](https://github.com/OpenADMET/pxr-challenge-tabicl).
+From the OpenADMET pregnane X receptor (PXR) blind challenge analysis
+([pxr-challenge-tabicl](https://github.com/OpenADMET/pxr-challenge-tabicl)), on
+the partitions that analysis used.
 
 ```
 transfer_learning/
 ├── PXR_log2fc_single_concentration.parquet   stage 1 data, 10,830 compounds
 ├── PXR_pEC50_fit.parquet                     stage 2 fit, 4,392 compounds
 ├── PXR_pEC50_test_phase2.parquet             stage 2 test, 260 compounds
-├── chemprop_log2fc/                          stage 1: the auxiliary encoder
-└── tabicl_pec50/                             stage 2: the dose-response model
+├── chemprop_log2fc/                          stage 1
+└── tabicl_pec50/                             stage 2
 ```
 
 ## Running it
 
-Order matters, and so does the output directory name. Stage 2 refers to the
-stage 1 model by path, and `anvil` appends a timestamp and hash to an output
-directory that already exists, which would leave stage 2 pointing at nothing.
+Order matters, and so does the output directory name: `anvil` appends a
+timestamp and hash to a directory that already exists, which would leave stage 2
+pointing at nothing.
 
 ```bash
 cd chemprop_log2fc
@@ -37,93 +33,53 @@ cd ../tabicl_pec50
 openadmet anvil --recipe-path tabicl_pec50.yaml
 ```
 
-Stage 1 trains a message-passing network and wants a graphics processing unit
-(GPU). Stage 2 extracts CheMeleon embeddings on the GPU but runs TabICL on the
-central processing unit (CPU) deliberately: at 4,392 rows and 258 columns TabICL
-asks for 9.5 GiB on top of the 14 GiB it already holds, which does not fit in
-24 GiB. On CPU a fit takes about 160 seconds.
+Stage 1 wants a GPU. Stage 2 extracts embeddings on the GPU but runs TabICL on
+CPU deliberately: at 4,392 rows and 258 columns it does not fit in 24 GiB. About
+160 seconds per fit.
 
-## What each stage does
+## The split
 
-**Stage 1**, `chemprop_log2fc/chemprop_log2fc.yaml`, is a two-task regression.
-The challenge screened four concentrations; the two retained here cover 10,747
-and 9,523 of the 10,830 compounds, against 706 and 27 for the pair left out.
-Each arm is its own task, so `n_tasks: 2` and `dropna: False`: 1,390 compounds
-were screened at only one concentration, and ChemProp masks a missing target out
-of the loss rather than discarding the row's other arm.
+Stage 2 reads `train_resource` and `test_resource`, so the splitter never runs
+and the partitions are fixed to the challenge's own: fit on the dose-response
+training set pooled with phase 1 (4,392 compounds), score on the blinded phase 2
+set alone (260).
 
-This network is never scored on its own. It exists so stage 2 can read it, which
-is why the recipe carries no evaluation block and no test split.
+A run should land near **MAE 0.436**, against **0.4113** for the leading
+challenge entry and roughly **0.50** for the previous CheMeleon baseline. Every
+other recipe in this repository uses a random split and reports an optimistic
+number; this one does not.
 
-It trains on every compound in the pool for 5 epochs with early stopping off.
-That count is not a guess: the analysis's five encoders refit for 7, 5, 3, 7 and
-5 epochs, and 5 is the median. See [what this does not
-reproduce](#what-these-recipes-do-not-reproduce) for the one thing this costs.
+The log<sub>2</sub>FC pool shares 2,728 compounds with the fit partition, which
+is the transfer working, and none with phase 2, so no scored compound carries a
+feature from a network that saw its labels.
 
-**Stage 2**, `tabicl_pec50/tabicl_pec50.yaml`, builds 258 feature columns:
+## Features
 
-| Block | Native width | After PCA | Why |
+| Block | Native | After PCA | Why |
 | --- | --- | --- | --- |
-| `CheMeleonEmbeddingFeaturizer` | 2,048 | 256 | Reductions to 256, 384 and 512 were statistically tied in the analysis, and 256 is the cheapest of them. At 128 and below the reduction was clearly separated and worse. |
-| `TrainedModelFeaturizer` | 2 | 2 (passthrough) | Each column means one concentration's predicted log<sub>2</sub>FC. A PCA would rotate them into linear combinations, and at full rank would not reduce the width at all. |
+| `CheMeleonEmbeddingFeaturizer` | 2,048 | 256 | 256, 384 and 512 were statistically tied in the analysis; 128 and below were worse |
+| `TrainedModelFeaturizer` | 2 | 2 | Each column means one concentration's log<sub>2</sub>FC, so a PCA would rotate them without narrowing them |
 
-Passthrough is stated as `TrainedModelFeaturizer: null` rather than obtained by
-omitting the key, so the exact-match check still catches a mistyped block name.
-Blocks are keyed and ordered by featurizer class name, not by the order the
-recipe lists them, which is why the CheMeleon block comes first. Mean imputation
-runs ahead of each block's PCA, matching the analysis; neither block should carry
-a missing value, so it is a guard rather than a fix.
+Blocks are keyed and ordered by featurizer class name, so CheMeleon comes first
+whatever order the recipe lists.
 
-Two choices here were ties rather than wins, and are worth revisiting if you
-adapt this. The analysis's nominal best used a CheMeleon embedding fine-tuned on
-log<sub>2</sub>FC, which was statistically tied with the off-the-shelf embedding
-used here and would need a third trained model to ship. Three configurations
-that tie the leader omit the log<sub>2</sub>FC readout entirely, so the case for
-keeping stage 1 at all rested on a nominal difference rather than a separated
-one. TabICL was likewise tied with TabPFN v3 (seed means 0.427 and 0.436) and is
-used here for its BSD 3-Clause license against TabPFN's attribution requirement.
+Two ingredient choices were ties rather than wins. The analysis's nominal best
+used a log<sub>2</sub>FC-fine-tuned CheMeleon embedding, tied with the
+off-the-shelf one used here and needing a third trained model. TabICL tied
+TabPFN v3 (0.427 against 0.436) and is used for its BSD 3-Clause license.
 
-## The split, and what to expect
-
-Stage 2 reads `train_resource` and `test_resource` rather than splitting one
-file, so the splitter never runs and the partitions are fixed. This is the
-challenge's own evaluation split: fit on the dose-response training set pooled
-with phase 1 (4,392 compounds), score on the blinded phase 2 set alone (260).
-
-That makes the reported metric directly comparable to published numbers. The
-analysis measured a mean absolute error (MAE) of **0.436** for this
-configuration at a single seed, against **0.4113** for the leading challenge
-entry and roughly **0.50** for the previous CheMeleon baseline. A run of these
-recipes should land near 0.436.
-
-This departs from every other recipe in this repository, which use a random
-`ShuffleSplitter` and report optimistic metrics. Here the test compounds are a
-genuine blind holdout, so the number means what it says.
-
-The log<sub>2</sub>FC pool and the fit partition share 2,728 compounds, which is
-the transfer working as intended. **The pool and the phase 2 test set share
-none**, so no scored compound carries a feature from a network that saw any of
-its labels. The build script asserts both properties and refuses to write if
-either breaks.
-
-## What these recipes do not reproduce
+## What this does not reproduce
 
 **Five seeds.** The analysis trains five encoders and five regressors and reports
-both a seed mean and an ensemble of the five. These recipes run one of each, to
-show the method rather than to restate the measurement. The ensemble row scored
-0.432 against the 0.436 single-seed mean quoted above.
+a seed mean and a 5-member ensemble (0.432). These recipes run one of each.
 
-**The learning rate schedule of the refit.** The analysis holds out 20% of the
-log<sub>2</sub>FC pool, early-stops against it, then reinitializes and retrains
-on the full pool for the epoch count that produced. Its five seeds settled on 7,
-5, 3, 7 and 5 epochs, all drawn from a noam schedule calibrated to a 30-epoch
-budget, so each refit stops while the learning rate is still high.
-
-Anvil derives noam's decay from the trainer's `max_epochs`, so duration and
-schedule are one knob. Stage 1 trains on the full pool for the median 5 epochs,
-which matches the data and the epoch count but compresses the schedule into
-those 5 epochs. The rate ramps for 2 and then decays to its floor, where the
-analysis would still be near peak:
+**The refit's learning rate schedule.** The analysis early-stops against a 20%
+carve-out, then refits on the full pool for the epoch count that produced: 7, 5,
+3, 7 and 5 across its seeds, each drawn from a noam schedule calibrated to 30
+epochs, so each refit stops while the rate is still high. Anvil derives noam's
+decay from `max_epochs`, so duration and schedule are one knob. Stage 1 trains
+the full pool for the median 5 epochs, which matches the data and the epoch count
+but compresses the schedule:
 
 | Run ends at | Analysis, schedule 30 | Here, schedule 5 |
 | --- | --- | --- |
@@ -131,26 +87,21 @@ analysis would still be near peak:
 | epoch 5 | 0.61 × max_lr | 0.01 × max_lr |
 | epoch 7 | 0.44 × max_lr | 0.01 × max_lr |
 
-Reproducing both the schedule and the stopping point needs a validation split,
-since early stopping is the only thing that lets a run end before `max_epochs`.
-A `train_size: 0.8, val_size: 0.2` split with `early_stopping: true`,
-`early_stopping_patience: 10` and `early_stopping_min_delta: 0.001` reproduces
-the analysis's validation pass exactly, including the best-checkpoint restore,
-at the cost of the 20% those runs held out.
+To get both, use `train_size: 0.8, val_size: 0.2` with `early_stopping: true`,
+`early_stopping_patience: 10` and `early_stopping_min_delta: 0.001`. That
+reproduces the analysis's validation pass, including the best-checkpoint restore,
+at the cost of the 20% held out.
 
 ## Data provenance
 
-`PXR_log2fc_single_concentration.parquet` is built from
+`PXR_log2fc_single_concentration.parquet` comes from
 `pxr-challenge_single_concentration_TRAIN.csv` in the public
 [`openadmet/pxr-challenge-train-test`](https://huggingface.co/datasets/openadmet/pxr-challenge-train-test)
-dataset, which is published in long format at one row per compound and
-concentration. It is filtered to the two populated arms and pivoted to one row
-per compound, with repeat measurements of a compound at one concentration
-averaged. SMILES are canonicalized with RDKit after largest-fragment stripping.
+dataset, published in long format. It is filtered to the two populated
+concentration arms (10,747 and 9,523 observations, against 706 and 27 for the
+pair dropped) and pivoted to one row per compound, with repeats averaged. SMILES
+are canonicalized with RDKit after largest-fragment stripping.
 
-`PXR_pEC50_fit.parquet` and `PXR_pEC50_test_phase2.parquet` are converted from
-`data/splits/fit_all.csv` and `data/splits/test_phase2.csv` in the
-pxr-challenge-tabicl repository, which tracks the split it derived from the same
-Hugging Face dataset. They are reused rather than rederived so the partitions are
-identical to the ones the published metrics came from, down to the row. Those
-files carry the same canonical SMILES column, computed the same way.
+The two pEC<sub>50</sub> parquets are converted from `data/splits/fit_all.csv`
+and `data/splits/test_phase2.csv` in pxr-challenge-tabicl, reused rather than
+rederived so the rows match the published metrics exactly.
