@@ -82,10 +82,10 @@ procedure:
       normalized_targets: True
       dropout: 0.0
       batch_norm: False
-      # Noam calibrates its decay against the trainer's max_epochs, so the
-      # learning rate reaches its floor at epoch 30 and not before. The other
-      # ChemProp recipes here run plateau because they early-stop against an
-      # open-ended budget; this one trains a fixed 30 epochs
+      # Noam calibrates its decay against the trainer's max_epochs, which here
+      # is the 5-epoch budget below: the rate ramps for 2 epochs and decays to
+      # its floor over the remaining 3. The other ChemProp recipes here run
+      # plateau because they early-stop against an open-ended budget
       scheduler: noam
       warmup_epochs: 2
       max_lr: 1e-3
@@ -102,8 +102,8 @@ procedure:
     type: ShuffleSplitter
     # Every compound trains the encoder. The analysis this follows held out 20%
     # to early-stop, then reinitialized and retrained on the full pool for the
-    # epoch count that produced; training the whole budget on everything reaches
-    # the same place without spending a fifth of the screen to find the epoch
+    # epoch count that produced; this skips the search and trains on everything
+    # at the epoch count those runs settled on
     params:
       random_seed: 42
       train_size: 1.0
@@ -119,10 +119,11 @@ procedure:
     params:
       accelerator: gpu
       gradient_clip_val: 1.0
-      # Early stopping needs a validation loss and there is no validation split;
-      # the schedule above is calibrated to run exactly this long
+      # Early stopping needs a validation loss and there is no validation split.
+      # The budget is instead the epoch count the analysis's own refits used:
+      # its five seeds settled on 7, 5, 3, 7 and 5 epochs, so 5 is the median
       early_stopping: false
-      max_epochs: 30
+      max_epochs: 5
       deterministic: False
       use_wandb: false
       wandb_project: demos # Specify wandb project name according to guidelines

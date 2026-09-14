@@ -55,10 +55,10 @@ of the loss rather than discarding the row's other arm.
 This network is never scored on its own. It exists so stage 2 can read it, which
 is why the recipe carries no evaluation block and no test split.
 
-It trains on every compound in the pool, with noam calibrated to the full
-30-epoch budget and early stopping off. See [what this does not
-reproduce](#what-these-recipes-do-not-reproduce) for how that relates to the
-analysis's two-pass encoder.
+It trains on every compound in the pool for 5 epochs with early stopping off.
+That count is not a guess: the analysis's five encoders refit for 7, 5, 3, 7 and
+5 epochs, and 5 is the median. See [what this does not
+reproduce](#what-these-recipes-do-not-reproduce) for the one thing this costs.
 
 **Stage 2**, `tabicl_pec50/tabicl_pec50.yaml`, builds 258 feature columns:
 
@@ -113,15 +113,30 @@ both a seed mean and an ensemble of the five. These recipes run one of each, to
 show the method rather than to restate the measurement. The ensemble row scored
 0.432 against the 0.436 single-seed mean quoted above.
 
-**Refit-on-all, exactly.** The analysis holds out 20% of the log<sub>2</sub>FC
-pool, early-stops against it, then reinitializes and retrains on the full pool
-for the epoch count that produced. Anvil derives noam's decay from the trainer's
-`max_epochs`, so duration and schedule are one knob and the second pass cannot
-run a shorter budget without also recalibrating the schedule. Stage 1 therefore
-trains the full 30 epochs on the whole pool: same data, same schedule, and no
-fifth of the screen spent finding an epoch count. The analysis chose 30 to sit
-close to where early stopping was expected to land, so the two should end up near
-each other, though we have not measured the difference.
+**The learning rate schedule of the refit.** The analysis holds out 20% of the
+log<sub>2</sub>FC pool, early-stops against it, then reinitializes and retrains
+on the full pool for the epoch count that produced. Its five seeds settled on 7,
+5, 3, 7 and 5 epochs, all drawn from a noam schedule calibrated to a 30-epoch
+budget, so each refit stops while the learning rate is still high.
+
+Anvil derives noam's decay from the trainer's `max_epochs`, so duration and
+schedule are one knob. Stage 1 trains on the full pool for the median 5 epochs,
+which matches the data and the epoch count but compresses the schedule into
+those 5 epochs. The rate ramps for 2 and then decays to its floor, where the
+analysis would still be near peak:
+
+| Run ends at | Analysis, schedule 30 | Here, schedule 5 |
+| --- | --- | --- |
+| epoch 3 | 0.85 × max_lr | 0.22 × max_lr |
+| epoch 5 | 0.61 × max_lr | 0.01 × max_lr |
+| epoch 7 | 0.44 × max_lr | 0.01 × max_lr |
+
+Reproducing both the schedule and the stopping point needs a validation split,
+since early stopping is the only thing that lets a run end before `max_epochs`.
+A `train_size: 0.8, val_size: 0.2` split with `early_stopping: true`,
+`early_stopping_patience: 10` and `early_stopping_min_delta: 0.001` reproduces
+the analysis's validation pass exactly, including the best-checkpoint restore,
+at the cost of the 20% those runs held out.
 
 ## Data provenance
 
