@@ -2,9 +2,8 @@
 #
 # Features are a CheMeleon embedding PCA-reduced to 256 components, concatenated
 # with the two log2FC predictions the stage 1 network emits, giving TabICL 258
-# columns. This is the configuration the PXR challenge analysis carried forward;
-# see ../README.md for what each ingredient contributes and what it was measured
-# against.
+# columns. This is the configuration the PXR challenge analysis carried forward,
+# fit and scored on the partitions it used; see ../README.md.
 #
 # Stage 1 must have run first, and model_dir below must point at its output:
 #
@@ -12,9 +11,11 @@
 
 # Section specifying input data
 data:
-  # Pooled dose-response pEC50 across the challenge train and both unblinded
-  # phases; see ../README.md for provenance
-  resource: ../PXR_pEC50_dose_response.parquet
+  # The challenge's own evaluation split, not a random one: fit on the
+  # dose-response training set pooled with phase 1, score on the blinded phase 2
+  # set alone. A metric from these files is comparable to the published numbers
+  train_resource: ../PXR_pEC50_fit.parquet
+  test_resource: ../PXR_pEC50_test_phase2.parquet
   # must be intake
   type: intake
   # Specify input column containing SMILES
@@ -71,7 +72,8 @@ procedure:
             model_dir: ../chemprop_log2fc/chemprop_log2fc_model
             accelerator: auto
 
-  # Transform specification, fitted on train rows only and reapplied at inference
+  # Transform specification, fitted on the fit partition only and reapplied to
+  # phase 2 at scoring time
   # See openadmet.models.transforms
   transform:
   - type: PCATransform
@@ -79,13 +81,16 @@ procedure:
       # Blocks are keyed and ordered by featurizer class name, so the CheMeleon
       # block comes first here regardless of the order listed above. Reductions
       # to 256, 384 and 512 were statistically tied in the analysis and 256 is
-      # the cheapest of them; below 128 was clearly worse
+      # the cheapest of them; below 128 was clearly separated and worse
       n_components:
         CheMeleonEmbeddingFeaturizer: 256
         # Passed through unreduced: two columns that each mean a specific
         # concentration's log2FC, which a PCA would rotate into linear
         # combinations without reducing the width at all
         TrainedModelFeaturizer: null
+      # Mean imputation ahead of each block's PCA, matching the analysis. Neither
+      # block should carry a missing value, so this is a guard rather than a fix
+      impute_strategy: mean
       random_seed: 42
 
   # Model specification
@@ -97,16 +102,21 @@ procedure:
     params:
       random_seed: 42
       n_estimators: 8
-      # TabICL at 258 columns over ~4.6k rows may exceed a 24 GB card and fall
-      # back to CPU, which costs minutes rather than seconds per fit
-      accelerator: auto
+      # CPU rather than the accelerator, and not by preference. At 4,392 rows
+      # and 258 columns TabICL asks for 9.5 GiB on top of the 14 GiB it already
+      # holds, which does not fit in 24 GiB, and the three settings below are
+      # already at their cheapest. On CPU it fits, in about 160 seconds
+      accelerator: cpu
+      batch_size: 1
+      kv_cache: false
+      offload_mode: cpu
 
   # Specify data splits
   split:
-    # Specify how data will be split, can be ShuffleSplitter, ScaffoldSplitter, etc.
+    # Inert: train_resource and test_resource above are read directly, so the
+    # splitter never runs. The section is required by the recipe schema
     # See openadmet.models.split
     type: ShuffleSplitter
-    # Specify split parameters
     params:
       random_seed: 42
       train_size: 0.7
@@ -123,7 +133,7 @@ procedure:
 report:
   # Configure evaluation
   eval:
-  # Generate regression metrics
+  # Generate regression metrics, on the 260 phase 2 compounds
   - type: RegressionMetrics
     params:
       pXC50: True
@@ -136,4 +146,4 @@ report:
       max_val: 8
       min_val: 2
       pXC50: True
-      title: PXR True vs Predicted pEC50 on test set
+      title: PXR True vs Predicted pEC50 on phase 2 test set

@@ -3,8 +3,7 @@
 # Trains a two-task ChemProp network on primary-screen log2 fold change. This
 # model is never scored on its own. Stage 2 loads it frozen through a
 # TrainedModelFeaturizer and uses its predictions as two feature columns, so
-# what matters here is that the network learns a useful representation of the
-# primary screen, not that it wins on its own test split.
+# what matters here is the representation it learns, not a test metric.
 #
 # Run this first, and pin the output directory, because stage 2 refers to it
 # by path:
@@ -83,15 +82,17 @@ procedure:
       normalized_targets: True
       dropout: 0.0
       batch_norm: False
-      # Noam wants a known epoch budget and gets one from max_epochs below.
-      # The other recipes here run plateau because they early-stop against an
-      # open-ended budget; this one keeps the schedule the PXR analysis used,
-      # and early stopping only ends the run sooner than the schedule expects
+      # Noam calibrates its decay against the trainer's max_epochs, so the
+      # learning rate reaches its floor at epoch 30 and not before. The other
+      # ChemProp recipes here run plateau because they early-stop against an
+      # open-ended budget; this one trains a fixed 30 epochs
       scheduler: noam
       warmup_epochs: 2
       max_lr: 1e-3
       weight_decay: 0.0
-      monitor_metric: val_loss
+      # No validation split below, so the trainer monitors training loss;
+      # naming it here keeps the recipe honest about what gets checkpointed
+      monitor_metric: train_loss
       monitor_metric_mode: min
 
   # Specify data splits
@@ -99,12 +100,15 @@ procedure:
     # Specify how data will be split
     # See openadmet.models.split
     type: ShuffleSplitter
-    # Specify split parameters
+    # Every compound trains the encoder. The analysis this follows held out 20%
+    # to early-stop, then reinitialized and retrained on the full pool for the
+    # epoch count that produced; training the whole budget on everything reaches
+    # the same place without spending a fifth of the screen to find the epoch
     params:
       random_seed: 42
-      train_size: 0.7
-      val_size: 0.1
-      test_size: 0.2
+      train_size: 1.0
+      val_size: 0.0
+      test_size: 0.0
 
   # Specify training configuration
   train:
@@ -115,10 +119,9 @@ procedure:
     params:
       accelerator: gpu
       gradient_clip_val: 1.0
-      early_stopping: true
-      early_stopping_patience: 10
-      early_stopping_mode: min
-      early_stopping_min_delta: 0.001
+      # Early stopping needs a validation loss and there is no validation split;
+      # the schedule above is calibrated to run exactly this long
+      early_stopping: false
       max_epochs: 30
       deterministic: False
       use_wandb: false
@@ -126,12 +129,6 @@ procedure:
 
 # Section specifying report generation
 report:
-  # Configure evaluation
-  eval:
-  # Generate regression metrics
-  # No cross validation here: this network is a featurizer for stage 2, and
-  # refitting it five times over would cost GPU hours to score a model that is
-  # never read on its own
-  - type: RegressionMetrics
-    params:
-      pXC50: False
+  # No evaluation: there is no test split to score, and this network is read
+  # only through stage 2
+  eval: []
