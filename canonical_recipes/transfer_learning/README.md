@@ -69,30 +69,6 @@ used a log<sub>2</sub>FC-fine-tuned CheMeleon embedding, tied with the
 off-the-shelf one used here and needing a third trained model. TabICL tied
 TabPFN v3 (0.427 against 0.436) and is used for its BSD 3-Clause license.
 
-## What this does not reproduce
-
-**Five seeds.** The analysis trains five encoders and five regressors and reports
-a seed mean and a 5-member ensemble (0.432). These recipes run one of each.
-
-**The refit's learning rate schedule.** The analysis early-stops against a 20%
-carve-out, then refits on the full pool for the epoch count that produced: 7, 5,
-3, 7 and 5 across its seeds, each drawn from a noam schedule calibrated to 30
-epochs, so each refit stops while the rate is still high. Anvil derives noam's
-decay from `max_epochs`, so duration and schedule are one knob. Stage 1 trains
-the full pool for the median 5 epochs, which matches the data and the epoch count
-but compresses the schedule:
-
-| Run ends at | Analysis, schedule 30 | Here, schedule 5 |
-| --- | --- | --- |
-| epoch 3 | 0.85 × max_lr | 0.22 × max_lr |
-| epoch 5 | 0.61 × max_lr | 0.01 × max_lr |
-| epoch 7 | 0.44 × max_lr | 0.01 × max_lr |
-
-To get both, use `train_size: 0.8, val_size: 0.2` with `early_stopping: true`,
-`early_stopping_patience: 10` and `early_stopping_min_delta: 0.001`. That
-reproduces the analysis's validation pass, including the best-checkpoint restore,
-at the cost of the 20% held out.
-
 ## Data provenance
 
 `PXR_log2fc_single_concentration.parquet` comes from
