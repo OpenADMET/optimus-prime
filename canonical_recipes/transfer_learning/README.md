@@ -44,10 +44,11 @@ and the partitions are fixed to the challenge's own: fit on the dose-response
 training set pooled with phase 1 (4,392 compounds), score on the blinded phase 2
 set alone (260).
 
-A run should land near **MAE 0.436**, against **0.4113** for the leading
-challenge entry and roughly **0.50** for the previous CheMeleon baseline. Every
-other recipe in this repository uses a random split and reports an optimistic
-number; this one does not.
+A run of these recipes scored **MAE 0.4343** on those 260 compounds, against
+**0.4269** for the analysis's five-seed mean at a recorded seed spread of 0.007,
+**0.4113** for the leading challenge entry, and roughly **0.50** for the previous
+CheMeleon baseline. Every other recipe in this repository uses a random split and
+reports an optimistic number; this one does not.
 
 The log<sub>2</sub>FC pool shares 2,728 compounds with the fit partition, which
 is the transfer working, and none with phase 2, so no scored compound carries a
