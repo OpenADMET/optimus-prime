@@ -6,8 +6,7 @@
 
 # Section specifying input data
 data:
-  # The challenge's own split, not a random one: fit on the dose-response
-  # training set pooled with phase 1, score on blinded phase 2 alone
+  # Challenge test split
   train_resource: ../PXR_pEC50_fit.parquet
   test_resource: ../PXR_pEC50_test_phase2.parquet
   # must be intake
@@ -67,15 +66,11 @@ procedure:
   transform:
   - type: PCATransform
     params:
-      # Blocks are keyed and ordered by featurizer class name, so CheMeleon
-      # comes first whatever order the recipe lists. 256, 384 and 512 were
-      # statistically tied in the analysis; 128 and below were worse
       n_components:
         CheMeleonEmbeddingFeaturizer: 256
-        # Unreduced: each column means one concentration's log2FC, and a PCA
-        # would rotate them into linear combinations without narrowing them
+        # Direct passthrough
         TrainedModelFeaturizer: null
-      # Matches the analysis; neither block should carry a missing value
+      # Matches the analysis
       impute_strategy: mean
       random_seed: 42
 
@@ -86,9 +81,7 @@ procedure:
     params:
       random_seed: 42
       n_estimators: 8
-      # CPU by necessity, not preference: at 4,392 rows and 258 columns TabICL
-      # wants 9.5 GiB on top of the 14 GiB it holds, which overflows 24 GiB.
-      # The three settings below are already at their cheapest. ~160 s per fit
+      # CPU unless GPU has > 24 GB VRAM
       accelerator: cpu
       batch_size: 1
       kv_cache: false
@@ -96,8 +89,7 @@ procedure:
 
   # Specify data splits
   split:
-    # Inert: train_resource and test_resource are read directly, so the splitter
-    # never runs. Required by the recipe schema
+    # Ignored for no-split config
     # See openadmet.models.split
     type: ShuffleSplitter
     params:
