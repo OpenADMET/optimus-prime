@@ -67,10 +67,10 @@ procedure:
   - type: PCATransform
     params:
       n_components:
+        # PCA reduce to 256 dims
         CheMeleonEmbeddingFeaturizer: 256
         # Direct passthrough
         TrainedModelFeaturizer: null
-      # Matches the analysis
       impute_strategy: mean
       random_seed: 42
 
