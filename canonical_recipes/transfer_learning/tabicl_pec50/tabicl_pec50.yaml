@@ -1,0 +1,121 @@
+# Stage 2 of 2: TabICL on pEC50, over a PCA-reduced CheMeleon embedding
+# concatenated with the stage 1 log2FC predictions (256 + 2 = 258 columns).
+# Requires stage 1 to have run first:
+#
+#   openadmet anvil --recipe-path tabicl_pec50.yaml
+
+# Section specifying input data
+data:
+  # Challenge test split
+  train_resource: ../PXR_pEC50_fit.parquet
+  test_resource: ../PXR_pEC50_test_phase2.parquet
+  # must be intake
+  type: intake
+  # Specify input column containing SMILES
+  input_col: OPENADMET_SMILES
+  # Specify each (1+) of the target columns, or the column that you're trying to predict
+  target_cols:
+  - OPENADMET_PEC50
+  # Specify whether or not to drop NaN data rows
+  dropna: true
+
+# Additional metadata
+metadata:
+  authors: Sean M Colby
+  email: sean.colby@omsf.io
+  biotargets:
+  - PXR
+  build_number: 0
+  description: PXR pEC50 regression with TabICL over a PCA-reduced CheMeleon embedding concatenated with frozen log2FC predictions
+  driver: sklearn
+  name: pxr_pec50_tabicl
+  tag: openadmet-PXR-pec50-tabicl
+  tags:
+  - openadmet
+  - PXR
+  - pec50
+  - tabicl
+  - transfer-learning
+  version: v1
+
+# Section specifying training procedure
+procedure:
+  # Global seed; any section without its own random_seed inherits this
+  random_seed: 42
+
+  # Featurization specification
+  feat:
+    # See openadmet.models.features
+    type: FeatureConcatenator
+    params:
+      featurizers:
+        # Off-the-shelf CheMeleon, 2,048 pooled MPNN dimensions
+        - type: CheMeleonEmbeddingFeaturizer
+          params:
+            batch_size: 256
+            accelerator: auto
+        # The frozen stage 1 network, one column per concentration arm. Path is
+        # relative to this file, so stage 1 needs --output-dir chemprop_log2fc_model
+        - type: TrainedModelFeaturizer
+          params:
+            model_dir: ../chemprop_log2fc/chemprop_log2fc_model
+            accelerator: auto
+
+  # Fitted on the fit partition only, reapplied to phase 2 at scoring time
+  # See openadmet.models.transforms
+  transform:
+  - type: PCATransform
+    params:
+      n_components:
+        # PCA reduce to 256 dims
+        CheMeleonEmbeddingFeaturizer: 256
+        # Direct passthrough
+        TrainedModelFeaturizer: null
+      impute_strategy: mean
+      random_seed: 42
+
+  # Model specification
+  model:
+    # See openadmet.models.architecture
+    type: TabICLRegressorModel
+    params:
+      random_seed: 42
+      n_estimators: 8
+      # CPU unless GPU has > 24 GB VRAM
+      accelerator: cpu
+      batch_size: 1
+      kv_cache: false
+      offload_mode: cpu
+
+  # Specify data splits
+  split:
+    # Ignored for no-split config
+    # See openadmet.models.split
+    type: ShuffleSplitter
+    params:
+      random_seed: 42
+      train_size: 1.0
+      val_size: 0.0
+      test_size: 0.0
+
+  # Specify training configuration
+  train:
+    # See openadmet.models.trainer
+    type: SKLearnBasicTrainer
+
+# Section specifying report generation
+report:
+  # Configure evaluation, on the 260 phase 2 compounds
+  eval:
+  - type: RegressionMetrics
+    params:
+      pXC50: True
+  - type: RegressionPlots
+    params:
+      axes_labels:
+      - True pEC50
+      - Predicted pEC50
+      max_val: 8
+      min_val: 2
+      pXC50: True
+      title: PXR True vs Predicted pEC50 on phase 2 test set
