@@ -19,14 +19,17 @@ metadata:
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression using a TabPFN model
+  description: Canonical single-task regression of CYP3A4 pChEMBL (ChEMBL) with TabPFN, as a 5-member bagged committee with calibrated uncertainty
   driver: sklearn
-  name: tabpfn_pchembl
-  tag: openadmet-chembl
+  name: tabpfn_st_cyp3a4_pchembl_ensemble
+  tag: canonical-tabpfn-st-ensemble
   tags:
   - openadmet
-  - test
+  - canonical
+  - tabpfn
+  - single-task
   - pchembl
+  - ensemble
   version: v1
 
 # Section specifying training procedure

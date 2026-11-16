@@ -1,4 +1,4 @@
-# This spection specifies the input data
+# This section specifies the input data
 data:
   # Specify the dataset file
   resource: ../ChEMBL_permissive_CYP3A4_CHEMBL340_aggregated.parquet
@@ -17,13 +17,16 @@ metadata:
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression using a ChemProp multitask task model
+  description: Canonical single-task regression of CYP3A4 pChEMBL (ChEMBL) with a ChemProp MPNN
   driver: pytorch
-  name: chemprop_pchembl
-  tag: chemprop-PXR-chembl
+  name: chemprop_st_cyp3a4_pchembl
+  tag: canonical-chemprop-st
   tags:
   - openadmet
-  - test
+  - canonical
+  - chemprop
+  - single-task
+  - pchembl
   version: v1
 
 # Section specifying training procedure

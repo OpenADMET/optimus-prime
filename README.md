@@ -5,27 +5,44 @@
 # Canonical recipes
 
 [![DOI](https://zenodo.org/badge/1032724010.svg)](https://doi.org/10.5281/zenodo.21504162)
+[![Validate recipes](https://github.com/OpenADMET/optimus-prime/actions/workflows/validate-recipes.yaml/badge.svg)](https://github.com/OpenADMET/optimus-prime/actions/workflows/validate-recipes.yaml)
 
-Directory that contains all the prime examples of Anvil recipe.yamls for each model in the OpenADMET suite.  
+Reference [Anvil](https://github.com/OpenADMET/openadmet-models) recipes for
+each model in the OpenADMET suite. Each recipe folder has a `.yaml` recipe and
+an `.sbatch` script to launch it on a SLURM GPU or CPU node.
 
-Current available models are:
-``` 
+```
 canonical_recipes/
-├── multitask/
-  ├── chemeleon
-  └── chemprop
-├── single_task/
-  ├── chemeleon
-  ├── chemprop
-  ├── lgbm
-  ├── tabpfn # still in progress
-  └── xgboost
-  └── catboost
-  └── random forest
-  └── dummy
-├── transfer_learning/ # two-stage; see its README
-  ├── chemprop_log2fc
-  └── tabicl_pec50
+├── single_task/          CYP3A4 pChEMBL (ChEMBL), data vendored
+│   ├── catboost
+│   ├── chemeleon
+│   ├── chemprop
+│   ├── lgbm
+│   ├── rf
+│   ├── tabpfn
+│   └── xgboost
+├── multitask/            CYP3A4 / 2D6 / 2C9 / 1A2 log AC50, data vendored
+│   ├── chemeleon
+│   └── chemprop
+├── ensemble/             5-member bagged committees with calibrated uncertainty
+│   ├── single_task/      same models as single_task/
+│   └── multitask/        same models as multitask/
+├── finetuning/
+│   └── single_task/chemprop   AChE-pretrained ChemProp fine-tuned on CYP3A4
+└── transfer_learning/    two-stage PXR recipe; see its README
+    ├── chemprop_log2fc
+    └── tabicl_pec50
+```
+
+The `ensemble/` recipes reference the same datasets as their non-ensemble
+counterparts, but those files are not copied into `ensemble/`. Point
+`data.resource` at your own copy before running them.
+
+Run any recipe from its own folder:
+
+```bash
+cd canonical_recipes/single_task/xgboost
+openadmet anvil --recipe-path xgboost.yaml
 ```
 Models that should really only be run on GPU are:
 - Chemeleon (DL)
@@ -97,3 +114,16 @@ These operate on the SMILES `input_col`, so they work for any recipe whose
 > estimate and read the CV metrics as random-split (optimistic) numbers.
 
 
+
+## Validating recipes
+
+CI builds every recipe against the latest `openadmet-models` main on each push
+and pull request, and weekly, so upstream parameter renames surface here. It
+parses each recipe and constructs every component but loads no data and trains
+nothing. To run the same check locally in an environment with `openadmet-models`
+installed:
+
+```bash
+python scripts/validate_recipes.py                     # all recipes
+python scripts/validate_recipes.py path/to/recipe.yaml # just one
+```

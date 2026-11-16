@@ -1,4 +1,4 @@
-# This spection specifies the input data
+# This section specifies the input data
 data:
   # Specify the dataset file
   resource: ../ChEMBL_permissive_CYP3A4_CHEMBL340_aggregated.parquet
@@ -16,14 +16,17 @@ metadata:
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression using a LightGBM model
+  description: Canonical single-task regression of CYP3A4 pChEMBL (ChEMBL) with LightGBM, as a 5-member bagged committee with calibrated uncertainty
   driver: sklearn
-  name: lgbm_pchembl
-  tag: openadmet-chembl
+  name: lgbm_st_cyp3a4_pchembl_ensemble
+  tag: canonical-lgbm-st-ensemble
   tags:
   - openadmet
-  - test
+  - canonical
+  - lgbm
+  - single-task
   - pchembl
+  - ensemble
   version: v1
 
 # Section specifying training procedure

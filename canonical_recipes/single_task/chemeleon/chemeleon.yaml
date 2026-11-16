@@ -17,13 +17,16 @@ metadata:
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression using a ChemProp multitask task model
+  description: Canonical single-task regression of CYP3A4 pChEMBL (ChEMBL) with a ChemProp MPNN initialised from the CheMeleon foundation model
   driver: pytorch
-  name: chemprop_pchembl
-  tag: chemprop-chembl
+  name: chemeleon_st_cyp3a4_pchembl
+  tag: canonical-chemeleon-st
   tags:
   - openadmet
-  - test
+  - canonical
+  - chemeleon
+  - single-task
+  - pchembl
   version: v1
 
 # Section specifying training procedure

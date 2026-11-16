@@ -16,13 +16,15 @@ metadata:
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression using a random forest model
+  description: Canonical single-task regression of CYP3A4 pChEMBL (ChEMBL) with a random forest
   driver: sklearn
-  name: rf_pchembl
-  tag: openadmet-chembl
+  name: rf_st_cyp3a4_pchembl
+  tag: canonical-rf-st
   tags:
   - openadmet
-  - test
+  - canonical
+  - rf
+  - single-task
   - pchembl
   version: v1
 

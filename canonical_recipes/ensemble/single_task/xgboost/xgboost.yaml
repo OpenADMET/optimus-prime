@@ -1,4 +1,4 @@
-# This spection specifies the input data
+# This section specifies the input data
 data:
   # Specify the dataset file
   resource: ../ChEMBL_permissive_CYP3A4_CHEMBL340_aggregated.parquet
@@ -16,14 +16,17 @@ metadata:
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression using a XGBoost model
+  description: Canonical single-task regression of CYP3A4 pChEMBL (ChEMBL) with XGBoost, as a 5-member bagged committee with calibrated uncertainty
   driver: sklearn
-  name: xgboost_pchembl
-  tag: openadmet-chembl
+  name: xgboost_st_cyp3a4_pchembl_ensemble
+  tag: canonical-xgboost-st-ensemble
   tags:
   - openadmet
-  - test
+  - canonical
+  - xgboost
+  - single-task
   - pchembl
+  - ensemble
   version: v1
 
 # Section specifying training procedure

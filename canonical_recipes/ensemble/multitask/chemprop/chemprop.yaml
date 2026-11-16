@@ -22,17 +22,20 @@ metadata:
   biotargets:
   - CYP3A4
   - CYP2D6
-  - CYP2D9
+  - CYP2C9
   - CYP1A2
   build_number: 0
-  description: basic regression using a ChemProp multitask task model
+  description: Canonical multitask regression of CYP3A4, CYP2D6, CYP2C9 and CYP1A2 log AC50 with a ChemProp MPNN, as a 5-member bagged committee with calibrated uncertainty
   driver: pytorch
-  name: chemprop_pchembl
-  tag: chemprop
+  name: chemprop_mt_cyp_logac50_ensemble
+  tag: canonical-chemprop-mt-ensemble
   tags:
   - openadmet
-  - test
+  - canonical
   - chemprop
+  - multitask
+  - logac50
+  - ensemble
   version: v1
 
 # Section specifying training procedure
