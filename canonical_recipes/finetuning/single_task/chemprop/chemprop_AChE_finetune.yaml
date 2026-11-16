@@ -15,15 +15,16 @@ metadata:
   - CYP3A4
   build_number: 0
   # Description of the experiment
-  description: basic regression trained on AChE and fine-tuned to CYP3A4 pChEMBL using ChemProp
+  description: Canonical fine-tuning example, a ChemProp MPNN pretrained on AChE, fine-tuned on CYP3A4 pChEMBL (ChEMBL) with message passing frozen
   driver: pytorch
-  email: sea.colby@omsf.io
-  name: CYP3A4_pchembl_finetune_testing_chemprop
-  tag: openadmet-CYP3A4-pchembl-finetune-regression-testing
+  email: sean.colby@omsf.io
+  name: chemprop_st_cyp3a4_pchembl_finetune
+  tag: canonical-chemprop-st-finetune
   tags:
-  - CYP3A4
   - openadmet
-  - test
+  - canonical
+  - chemprop
+  - single-task
   - pchembl
   - finetuning
   version: v1

@@ -16,13 +16,15 @@ metadata:
   biotargets:
   - CYP3A4
   build_number: 0
-  description: basic regression using a CatBoost model
+  description: Canonical single-task regression of CYP3A4 pChEMBL (ChEMBL) with CatBoost
   driver: sklearn
-  name: catboost_pchembl
-  tag: openadmet-chembl
+  name: catboost_st_cyp3a4_pchembl
+  tag: canonical-catboost-st
   tags:
   - openadmet
-  - test
+  - canonical
+  - catboost
+  - single-task
   - pchembl
   version: v1
 
